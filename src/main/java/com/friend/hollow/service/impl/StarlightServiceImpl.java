@@ -294,7 +294,7 @@ public class StarlightServiceImpl implements StarlightService {
         addSeed(
                 "在大理洱海的那个午后",
                 null,
-                "https://lh3.googleusercontent.com/aida-public/AB6AXuC7Ann02e4_o1UhUk7PbMUBuBZHBxTl9WpSJ_aNm1mgUejv_iqV33Abi3EOs3cT3hlzcslUFbjyMmJYOXpGxM-fd9UN9UzthtRcIpfPNCoShOetO7YkE24VgAXu-cx-aHv2yasKB5NW20c6v3mM-La-uqe8rQzd8d6k5Os3Qi1_OPJKWL3Y-okoh7EuJQ-GHm0SXrN9PFDd357qz8CFnzFY4sLvEmVLHkz6ksx9Xx1P25-GClMG-VuNKxWCdrfbvjb177I6PxU9tGU",
+                "/images/starlight-seed-1.jpg",
                 MemoryCategory.TRAVEL,
                 LocalDate.of(2023, 10, 15),
                 List.of("小雨", "阿强"),
@@ -304,7 +304,7 @@ public class StarlightServiceImpl implements StarlightService {
         addSeed(
                 "重聚的拥抱",
                 "两年没见，你还是那个爱大笑的女孩。我们在老操场坐了很久，聊着那些回不去的青葱岁月。",
-                "https://lh3.googleusercontent.com/aida-public/AB6AXuDZqZWOYeufOxYMKPojXWeNCOqF4Z1jSRRiHeoGwmKqAUC1I08KehJYvOk6hrDdkaBAUZP-A4vc6189KBojK7QkMEJYgTl_zFSq6gvo9J5zvIx4U_dtab-MWg7F1P410JLNVCmXv-HtVDdNL9r6AJDmtyGBLrj4egLpqcyzHCyRKz_--9iau786hG70kJEdB7_b7t1_2Ha5uBQy6BZenSsmzhX388sooLeZY5A4iHXODwgxHSw7MO7X9SdAfI0K5ClvsnWyYWSZVus",
+                "/images/starlight-seed-2.jpg",
                 MemoryCategory.DAILY,
                 LocalDate.of(2024, 2, 12),
                 List.of(),
@@ -314,7 +314,7 @@ public class StarlightServiceImpl implements StarlightService {
         addSeed(
                 "周末的拿铁时光",
                 null,
-                "https://lh3.googleusercontent.com/aida-public/AB6AXuAutLpa3z6GNgY2hZoZTGaLOPzHobrN_s798VN_k9g1Y6CZlsPS3Gp3jvSdbc_o86fHGjp1jJILA6WQGYvJ0asCHnlY1BLChPSkve3EpdCHlajcjRJsB3WdzDwIl-JfnL41Wi5o2q9LduU42MOcdpl0shrPedkI9nKYCeuGnHp1S3-vDzibdGESv_qD51Q8OBKVwql06RsRe6nY6W8biiB6fJd7KUP849HHRqDVXk_yXs2ZVf-L-IGRhuERIKatenqqBj19PC_0iok",
+                "/images/starlight-seed-3.jpg",
                 MemoryCategory.DAILY,
                 LocalDate.of(2024, 3, 20),
                 List.of(),
@@ -324,7 +324,7 @@ public class StarlightServiceImpl implements StarlightService {
         addSeed(
                 "草莓音乐节狂欢",
                 null,
-                "https://lh3.googleusercontent.com/aida-public/AB6AXuAGTblKic3WJ90i8N47V43l-VYaAsi7aoECXNMovOiGQq5pF9xfixOACvWGp4p4bb9PV4zSdZRKD-9_ooeN_U9mEmP4h2Hr11f2kuBziqVshHYyETwzzFEltyBJjQ_-Mu-8aaVooa_4f8E0peF3tI3m9emDuk935Hwj9EzaFx000mP1HeYYRqpZFJu1w-2YZf3l1ymaDJLFTkrotLz9dJuP870Qd_NQPMcHaLBT-StH61dSnZiBeM5RFiEZu__OvVAhb_W-8RYuiOk",
+                "/images/starlight-seed-4.jpg",
                 MemoryCategory.SPORT,
                 LocalDate.of(2023, 5, 2),
                 List.of(),
