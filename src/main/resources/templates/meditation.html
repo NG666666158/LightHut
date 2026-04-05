@@ -6,26 +6,6 @@
     <title>冥想 - 挚友专属・治愈树洞备忘录</title>
     <th:block th:replace="~{fragments/common-head :: coreDeps()}"></th:block>
     <style>
-        body {
-            margin: 0;
-            min-height: 100vh;
-            min-height: 100dvh;
-            width: 100%;
-            max-width: 100vw;
-            overflow-x: hidden;
-            overflow-y: auto;
-            font-family: 'Be Vietnam Pro', sans-serif;
-            background-color: #fffcf7;
-            color: #373831;
-        }
-        .font-headline { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
-        .glass-panel {
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-        }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         #medBreathCore {
             transform: scale(1);
             transition-property: transform;
@@ -35,12 +15,34 @@
             box-shadow: 0 0 0 2px rgba(147, 82, 82, 0.45), 0 8px 28px rgba(147, 82, 82, 0.12);
             border-color: rgba(147, 82, 82, 0.35);
         }
+        .med-noise-card--playing {
+            background: linear-gradient(155deg, #3f3836 0%, #2a2523 100%) !important;
+            border-color: rgba(147, 82, 82, 0.55) !important;
+            color: #fcf9f3 !important;
+            box-shadow: 0 10px 32px rgba(0, 0, 0, 0.2) !important;
+        }
+        .med-noise-card--playing .med-noise-icon-wrap {
+            background: rgba(255, 255, 255, 0.1) !important;
+        }
+        .med-noise-card--playing .material-symbols-outlined {
+            color: #fde8e8 !important;
+        }
+        .med-noise-card--playing .med-noise-title {
+            color: #fcf9f3 !important;
+        }
+        .med-noise-vol {
+            width: 100%;
+            height: 0.35rem;
+            border-radius: 999px;
+            accent-color: #935252;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body class="flex min-h-screen w-full max-w-full flex-col overflow-x-hidden bg-background font-body text-on-surface selection:bg-primary-fixed selection:text-on-primary-container lg:flex-row">
 <nav th:replace="~{fragments/layout :: sidebar('meditation')}"></nav>
 
-<main class="relative flex min-h-screen min-w-0 w-full flex-1 flex-col overflow-y-auto bg-surface lg:ml-72">
+<main class="relative flex min-h-screen min-w-0 w-full flex-1 flex-col overflow-y-auto bg-surface hollow-main-scroll lg:ml-72">
     <header th:replace="~{fragments/layout :: topbar(activeTopNav='meditation')}"></header>
 
     <section class="relative flex min-h-0 w-full flex-1 flex-col px-4 py-8 sm:px-8 lg:px-12 xl:px-20 lg:py-12">
@@ -80,57 +82,11 @@
         </div>
 
         <section class="mt-16 w-full sm:mt-24">
-            <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
-                <h2 class="font-headline text-2xl font-bold leading-tight tracking-tight text-on-surface sm:text-3xl md:text-4xl">白噪音选择</h2>
-                <span class="cursor-default text-base font-medium text-on-surface-variant sm:text-lg" title="后续可接入更多声景">更多声景筹备中</span>
-            </div>
-            <div class="no-scrollbar flex gap-5 overflow-x-auto scroll-smooth pb-6 sm:gap-6">
-                <div class="w-40 shrink-0 sm:w-44">
-                    <button type="button" class="med-noise-card group flex h-44 w-full cursor-pointer flex-col items-center justify-center gap-4 rounded-xl border border-outline-variant/10 bg-surface-container-low transition-all hover:bg-surface-container-high glass-panel sm:h-48"
-                            data-noise="rain" aria-pressed="false">
-                        <div class="flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 sm:h-[4.5rem] sm:w-[4.5rem]">
-                            <span class="material-symbols-outlined text-4xl text-blue-400 sm:text-[2.75rem]">water_drop</span>
-                        </div>
-                        <span class="text-base font-semibold text-on-surface sm:text-lg">细雨声</span>
-                    </button>
-                </div>
-                <div class="w-40 shrink-0 sm:w-44">
-                    <button type="button" class="med-noise-card group flex h-44 w-full cursor-pointer flex-col items-center justify-center gap-4 rounded-xl border border-outline-variant/10 bg-surface-container-low transition-all hover:bg-surface-container-high glass-panel sm:h-48"
-                            data-noise="forest" aria-pressed="false">
-                        <div class="flex h-16 w-16 items-center justify-center rounded-full bg-secondary-fixed/80 sm:h-[4.5rem] sm:w-[4.5rem]">
-                            <span class="material-symbols-outlined text-4xl text-secondary sm:text-[2.75rem]">forest</span>
-                        </div>
-                        <span class="text-base font-semibold text-on-surface sm:text-lg">林间晨曦</span>
-                    </button>
-                </div>
-                <div class="w-40 shrink-0 sm:w-44">
-                    <button type="button" class="med-noise-card group flex h-44 w-full cursor-pointer flex-col items-center justify-center gap-4 rounded-xl border border-outline-variant/10 bg-surface-container-low transition-all hover:bg-surface-container-high glass-panel sm:h-48"
-                            data-noise="waves" aria-pressed="false">
-                        <div class="flex h-16 w-16 items-center justify-center rounded-full bg-cyan-50 sm:h-[4.5rem] sm:w-[4.5rem]">
-                            <span class="material-symbols-outlined text-4xl text-cyan-500 sm:text-[2.75rem]">waves</span>
-                        </div>
-                        <span class="text-base font-semibold text-on-surface sm:text-lg">海浪拍岸</span>
-                    </button>
-                </div>
-                <div class="w-40 shrink-0 sm:w-44">
-                    <button type="button" class="med-noise-card group flex h-44 w-full cursor-pointer flex-col items-center justify-center gap-4 rounded-xl border border-outline-variant/10 bg-surface-container-low transition-all hover:bg-surface-container-high glass-panel sm:h-48"
-                            data-noise="chime" aria-pressed="false">
-                        <div class="flex h-16 w-16 items-center justify-center rounded-full bg-primary-container/40 sm:h-[4.5rem] sm:w-[4.5rem]">
-                            <span class="material-symbols-outlined text-4xl text-primary sm:text-[2.75rem]">notifications</span>
-                        </div>
-                        <span class="text-base font-semibold text-on-surface sm:text-lg">风铃微语</span>
-                    </button>
-                </div>
-                <div class="w-40 shrink-0 sm:w-44">
-                    <button type="button" class="med-noise-card group flex h-44 w-full cursor-pointer flex-col items-center justify-center gap-4 rounded-xl border border-outline-variant/10 bg-surface-container-low transition-all hover:bg-surface-container-high glass-panel sm:h-48"
-                            data-noise="fire" aria-pressed="false">
-                        <div class="flex h-16 w-16 items-center justify-center rounded-full bg-orange-50 sm:h-[4.5rem] sm:w-[4.5rem]">
-                            <span class="material-symbols-outlined text-4xl text-orange-400 sm:text-[2.75rem]">local_fire_department</span>
-                        </div>
-                        <span class="text-base font-semibold text-on-surface sm:text-lg">篝火暖意</span>
-                    </button>
-                </div>
-            </div>
+            <h2 class="mb-8 font-headline text-2xl font-bold leading-tight tracking-tight text-on-surface sm:text-3xl md:text-4xl">白噪音选择</h2>
+            <p id="medNoiseEmpty" class="hidden rounded-xl border border-dashed border-outline-variant/40 bg-surface-container-low/50 px-4 py-8 text-center text-sm text-on-surface-variant">
+                暂无可播放文件。请将 .mp3 放入项目根目录的 <code class="rounded bg-surface-container-highest px-1.5 py-0.5 text-xs">mp3</code> 文件夹后刷新页面。
+            </p>
+            <div id="medNoiseGrid" class="flex flex-wrap content-start gap-5 sm:gap-6"></div>
         </section>
     </section>
 </main>
@@ -209,31 +165,187 @@
             }
         });
 
-        var cards = document.querySelectorAll('.med-noise-card');
-        var selected = null;
-        cards.forEach(function (card) {
-            card.addEventListener('click', function () {
-                if (selected === card) {
-                    card.classList.remove('is-selected');
-                    card.setAttribute('aria-pressed', 'false');
-                    selected = null;
-                    return;
-                }
-                if (selected) {
-                    selected.classList.remove('is-selected');
-                    selected.setAttribute('aria-pressed', 'false');
-                }
-                selected = card;
-                card.classList.add('is-selected');
+        /** 按文件名（非列表顺序）绑定图标，避免排序变化后图文错位 */
+        var NOISE_VISUAL = {
+            'bubbles.mp3': { icon: 'water_drop', bg: 'bg-blue-50', col: 'text-blue-400' },
+            'campfire.mp3': { icon: 'local_fire_department', bg: 'bg-orange-50', col: 'text-orange-500' },
+            'howling-wind.mp3': { icon: 'air', bg: 'bg-slate-100', col: 'text-slate-600' },
+            'jungle.mp3': { icon: 'forest', bg: 'bg-emerald-50', col: 'text-emerald-700' },
+            'keyboard.mp3': { icon: 'keyboard', bg: 'bg-slate-100', col: 'text-slate-600' },
+            'light-rain.mp3': { icon: 'rainy', bg: 'bg-sky-50', col: 'text-sky-600' },
+            'rain-on-umbrella.mp3': { icon: 'umbrella', bg: 'bg-indigo-50', col: 'text-indigo-500' },
+            'river.mp3': { icon: 'water', bg: 'bg-cyan-50', col: 'text-cyan-600' },
+            'vinyl-effect.mp3': { icon: 'album', bg: 'bg-stone-200/80', col: 'text-stone-700' },
+            'walk-on-gravel.mp3': { icon: 'hiking', bg: 'bg-amber-50', col: 'text-amber-800' },
+            'waves.mp3': { icon: 'waves', bg: 'bg-cyan-50', col: 'text-cyan-600' },
+            'wind-chimes.mp3': { icon: 'music_note', bg: 'bg-violet-50', col: 'text-violet-600' },
+            'wind-in-trees.mp3': { icon: 'park', bg: 'bg-lime-50', col: 'text-lime-700' }
+        };
+        var NOISE_VISUAL_FALLBACK = [
+            { icon: 'graphic_eq', bg: 'bg-surface-container-highest', col: 'text-on-surface-variant' },
+            { icon: 'blur_on', bg: 'bg-primary-container/30', col: 'text-primary' },
+            { icon: 'spa', bg: 'bg-secondary-fixed/50', col: 'text-secondary' }
+        ];
+
+        function visualForNoiseFile(fileName) {
+            var key = String(fileName || '').toLowerCase();
+            if (NOISE_VISUAL[key]) {
+                return NOISE_VISUAL[key];
+            }
+            var h = 0;
+            for (var c = 0; c < key.length; c++) {
+                h = ((h << 5) - h) + key.charCodeAt(c);
+                h |= 0;
+            }
+            return NOISE_VISUAL_FALLBACK[Math.abs(h) % NOISE_VISUAL_FALLBACK.length];
+        }
+
+        var audios = {};
+        var playing = {};
+
+        function ensureAudio(trackId, url) {
+            if (audios[trackId]) {
+                return audios[trackId];
+            }
+            var a = new Audio();
+            a.loop = true;
+            a.preload = 'auto';
+            a.src = url;
+            audios[trackId] = a;
+            return a;
+        }
+
+        function setUiPlaying(trackId, isOn) {
+            var sel = '.med-noise-card[data-track-id="' + trackId.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"]';
+            var card = document.querySelector(sel);
+            if (!card) {
+                return;
+            }
+            if (isOn) {
+                card.classList.add('med-noise-card--playing');
                 card.setAttribute('aria-pressed', 'true');
-            });
-            card.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    card.click();
+            } else {
+                card.classList.remove('med-noise-card--playing');
+                card.setAttribute('aria-pressed', 'false');
+            }
+        }
+
+        function toggleTrack(trackId, url, slider) {
+            var a = ensureAudio(trackId, url);
+            var vol = slider ? parseInt(slider.value, 10) : 38;
+            if (isNaN(vol)) {
+                vol = 38;
+            }
+            a.volume = Math.min(1, Math.max(0, vol / 100));
+            if (playing[trackId]) {
+                a.pause();
+                playing[trackId] = false;
+                setUiPlaying(trackId, false);
+            } else {
+                var p = a.play();
+                if (p && typeof p.then === 'function') {
+                    p.then(function () {
+                        playing[trackId] = true;
+                        setUiPlaying(trackId, true);
+                    }).catch(function () {
+                        playing[trackId] = false;
+                        setUiPlaying(trackId, false);
+                    });
+                } else {
+                    playing[trackId] = true;
+                    setUiPlaying(trackId, true);
                 }
-            });
-        });
+            }
+        }
+
+        function escHtml(s) {
+            if (s == null) {
+                return '';
+            }
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function bindNoiseGrid() {
+            var grid = document.getElementById('medNoiseGrid');
+            var empty = document.getElementById('medNoiseEmpty');
+            if (!grid) {
+                return;
+            }
+            fetch('/api/meditation/noise-tracks')
+                .then(function (res) {
+                    if (!res.ok) {
+                        throw new Error('load');
+                    }
+                    return res.json();
+                })
+                .then(function (tracks) {
+                    if (!tracks || !tracks.length) {
+                        empty.classList.remove('hidden');
+                        return;
+                    }
+                    empty.classList.add('hidden');
+                    tracks.forEach(function (tr) {
+                        var wrap = document.createElement('div');
+                        wrap.className = 'w-[10.5rem] shrink-0 sm:w-44';
+                        var tid = tr.id;
+                        var vis = visualForNoiseFile(tr.fileName);
+                        var icon = vis.icon;
+                        var bg = vis.bg;
+                        var col = vis.col;
+                        wrap.innerHTML =
+                            '<button type="button" class="med-noise-card group flex min-h-[10.5rem] w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border border-outline-variant/10 bg-surface-container-low px-3 py-4 transition-all hover:bg-surface-container-high glass-panel sm:min-h-[11.5rem]" data-track-id="' +
+                            tid.replace(/"/g, '&quot;') +
+                            '" aria-pressed="false">' +
+                            '<div class="med-noise-icon-wrap flex h-14 w-14 items-center justify-center rounded-full sm:h-[4rem] sm:w-[4rem] ' +
+                            bg +
+                            '">' +
+                            '<span class="material-symbols-outlined text-3xl ' +
+                            col +
+                            ' sm:text-[2.5rem]">' +
+                            icon +
+                            '</span></div>' +
+                            '<span class="med-noise-title px-1 text-center text-sm font-semibold leading-snug text-on-surface sm:text-base">' +
+                            escHtml(tr.label) +
+                            '</span></button>' +
+                            '<div class="mt-2 px-0.5">' +
+                            '<input type="range" class="med-noise-vol" min="0" max="100" value="38" data-track-id="' +
+                            tid.replace(/"/g, '&quot;') +
+                            '" aria-label="音量"/>' +
+                            '</div>';
+
+                        var btn = wrap.querySelector('.med-noise-card');
+                        var range = wrap.querySelector('.med-noise-vol');
+                        btn.addEventListener('click', function (ev) {
+                            ev.preventDefault();
+                            toggleTrack(tid, tr.url, range);
+                        });
+                        ['mousedown', 'touchstart', 'input', 'click'].forEach(function (evt) {
+                            range.addEventListener(evt, function (e) {
+                                e.stopPropagation();
+                            });
+                        });
+                        range.addEventListener('input', function () {
+                            var a = audios[tid];
+                            if (a) {
+                                var v = parseInt(range.value, 10);
+                                a.volume = Math.min(1, Math.max(0, (isNaN(v) ? 38 : v) / 100));
+                            }
+                        });
+
+                        grid.appendChild(wrap);
+                    });
+                })
+                .catch(function () {
+                    empty.classList.remove('hidden');
+                    empty.textContent = '白噪音列表加载失败，请稍后重试。';
+                });
+        }
+
+        bindNoiseGrid();
     })();
 </script>
 </body>

@@ -7,25 +7,6 @@
 
     <th:block th:replace="~{fragments/common-head :: coreDeps()}"></th:block>
     <style>
-        /* 随浏览器窗口伸缩，允许纵向滚动 */
-        body {
-            margin: 0;
-            min-height: 100vh;
-            min-height: 100dvh;
-            width: 100%;
-            max-width: 100vw;
-            overflow-x: hidden;
-            overflow-y: auto;
-            font-family: 'Be Vietnam Pro', sans-serif;
-            background-color: #fffcf7;
-            color: #373831;
-        }
-
-        .font-headline { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
-        .glass-panel { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-
         /*
          成长树动画样式：
          - 树干高度、叶片大小会根据签到天数动态调整
@@ -175,6 +156,14 @@
             6% { opacity: 0.95; }
             100% { transform: translateX(calc(100vw + 40px)) translateY(-8vh); opacity: 0; }
         }
+        .home-surprise-mem-float--rise {
+            animation-name: homeMemFloatRise;
+        }
+        @keyframes homeMemFloatRise {
+            0% { transform: translateX(8vw) translateY(12px); opacity: 0; }
+            8% { opacity: 0.92; }
+            100% { transform: translateX(calc(100vw - 12vw)) translateY(-18vh); opacity: 0; }
+        }
 
         /* 问候逐字入场 + 整句极轻上浮（仅用 transform，避免 filter 动画导致抖动） */
         .home-greet-ch {
@@ -314,6 +303,54 @@
             opacity: 0;
             animation: homeEchoNoteFade 16s ease-out forwards;
         }
+        /* 挂在旅程卡片内：低于主文案 z-20，且只在上半区定位，避免压住标题与右侧栏 */
+        #dmJourneyCard .home-echo-note-float {
+            position: absolute;
+            z-index: 12;
+            max-width: min(13rem, 46%);
+            contain: layout paint;
+        }
+        /* 挚友鼓励：固定可视高度约 2～3 条，其余纵向轮播 */
+        .home-enc-ticker {
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 8%, #000 92%, transparent 100%);
+            mask-image: linear-gradient(to bottom, transparent 0%, #000 8%, #000 92%, transparent 100%);
+        }
+        .home-enc-ticker__strip {
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+            animation: homeEncTickerMarquee linear infinite;
+            will-change: transform;
+        }
+        .home-enc-ticker__item {
+            flex-shrink: 0;
+            padding: 0.35rem 0.4rem;
+            border-radius: 0.5rem;
+        }
+        /* 正文与署名同一行流式排布，署名略浅但字号与正文接近，便于阅读 */
+        .home-enc-ticker__line {
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 3;
+            overflow: hidden;
+            font-size: 0.875rem;
+            line-height: 1.45;
+            color: var(--md-sys-color-on-surface, #373831);
+        }
+        .home-enc-ticker__sig {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface-variant, #5c5d54);
+        }
+        @keyframes homeEncTickerMarquee {
+            from { transform: translate3d(0, 0, 0); }
+            to { transform: translate3d(0, -50%, 0); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .home-enc-ticker__strip {
+                animation: none !important;
+            }
+        }
         @keyframes homeEchoNoteFade {
             0% { opacity: 0; transform: translateY(8px) scale(0.98); }
             8% { opacity: 0.92; transform: translateY(0) scale(1); }
@@ -399,7 +436,7 @@
             <div id="dmJourneyCard" class="relative flex flex-col justify-end overflow-hidden rounded-xl bg-gradient-to-br from-primary-container/20 to-surface-container p-6 shadow-sm group sm:p-8 lg:p-12 xl:col-span-8">
                 <div class="absolute inset-0 z-0 opacity-40 mix-blend-multiply">
                     <img id="dmHeroImg" class="w-full h-full object-cover" alt="mountain"
-                         src="/images/daily-meditation.jpg" loading="eager" decoding="async">
+                         src="/images/daily-meditation.png" loading="eager" decoding="async">
                 </div>
                 <div class="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent z-10"></div>
                 <div class="relative z-20 max-w-lg">
@@ -457,11 +494,11 @@
                             <span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
                         </div>
                         <h4 class="text-xl font-headline font-semibold text-on-surface">挚友的鼓励</h4>
-                        <p class="text-sm text-on-surface-variant mt-2">
-                            “<span id="encouragementText">你今天看起来很温柔。</span>” —— <span id="encouragementSignature">来自醋酸钠的匿名便签</span>
-                        </p>
+                        <div id="encouragementTickerViewport" class="home-enc-ticker relative mt-2 h-[10rem] sm:h-[10.5rem] overflow-hidden rounded-lg border border-outline-variant/15 bg-surface-container-lowest/50 px-1 py-1">
+                            <div id="encouragementTickerStrip" class="home-enc-ticker__strip"></div>
+                        </div>
                     </div>
-                    <a class="text-primary font-label text-sm font-bold flex items-center hover:translate-x-2 transition-transform" th:href="@{/cheer}">
+                    <a class="relative z-10 text-primary font-label text-sm font-bold flex items-center hover:translate-x-2 transition-transform" th:href="@{/cheer}">
                         去打气站看看 <span class="material-symbols-outlined text-sm ml-1" data-icon="chevron_right">chevron_right</span>
                     </a>
                 </div>
@@ -540,6 +577,7 @@
 <script th:src="@{/js/home-greetings.js}"></script>
 <script th:src="@{/js/home-bliss-lines.js}"></script>
 <script th:src="@{/js/hollow-time-echo.js}"></script>
+<script th:src="@{/js/home-float-lines.js}"></script>
 <script th:src="@{/js/hollow-explore-bonds.js}"></script>
 <script th:src="@{/js/home-ambient.js}"></script>
 <script th:src="@{/js/home-journey.js}"></script>
@@ -671,7 +709,7 @@
             return;
         }
         var lastSlot = HollowHomeGreetings.slotForHour(new Date().getHours());
-        window.setInterval(function () {
+        var homeGreetingHourInterval = window.setInterval(function () {
             if (!window.HollowHomeGreetings) {
                 return;
             }
@@ -682,6 +720,11 @@
                 renderGreetingAnimated(h, s, now);
             }
         }, 60000);
+        if (typeof window.__hollowRegisterTurboCleanup === 'function') {
+            window.__hollowRegisterTurboCleanup(function () {
+                window.clearInterval(homeGreetingHourInterval);
+            });
+        }
     })();
 
     function blissTodayStr() {
@@ -882,6 +925,71 @@
         btn.dataset.ctaHref = dm.ctaHref || '/meditation';
     }
 
+    function escapeHtmlEnc(s) {
+        if (s == null) return '';
+        return String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function renderEncouragementTicker(lines) {
+        var strip = document.getElementById('encouragementTickerStrip');
+        var view = document.getElementById('encouragementTickerViewport');
+        if (!strip || !view) return;
+        strip.innerHTML = '';
+        strip.style.animationDuration = '';
+        if (!lines || !lines.length) {
+            var one = document.createElement('div');
+            one.className = 'home-enc-ticker__item';
+            one.innerHTML = '<p class="home-enc-ticker__line">这里会轮播鼓励语，稍后再来看看吧。</p>';
+            strip.appendChild(one);
+            return;
+        }
+        function appendBlock(line) {
+            var wrap = document.createElement('div');
+            wrap.className = 'home-enc-ticker__item bg-white/25';
+            var t = line.text != null ? line.text : '';
+            var sig = line.signature != null ? line.signature : '匿名便签';
+            wrap.innerHTML =
+                '<p class="home-enc-ticker__line">' +
+                '<span class="home-enc-ticker__q">“' +
+                escapeHtmlEnc(t) +
+                '”</span>' +
+                '<span class="home-enc-ticker__sig"> —— ' +
+                escapeHtmlEnc(sig) +
+                '</span></p>';
+            strip.appendChild(wrap);
+        }
+        lines.forEach(appendBlock);
+        lines.forEach(appendBlock);
+        window.requestAnimationFrame(function () {
+            var half = strip.scrollHeight / 2;
+            if (half < 4) return;
+            var sec = Math.max(28, Math.min(120, lines.length * 6));
+            strip.style.animationDuration = sec + 's';
+        });
+    }
+
+    function loadEncouragementFeed(fallbackLines) {
+        fetch('/api/home/encouragement-feed')
+            .then(function (res) {
+                if (!res.ok) throw new Error('feed');
+                return res.json();
+            })
+            .then(function (data) {
+                var lines = (data && data.lines) ? data.lines : [];
+                if (!lines.length && fallbackLines && fallbackLines.length) {
+                    lines = fallbackLines;
+                }
+                renderEncouragementTicker(lines);
+            })
+            .catch(function () {
+                renderEncouragementTicker(fallbackLines && fallbackLines.length ? fallbackLines : []);
+            });
+    }
+
     fetch('/api/home/overview')
         .then(function (res) { return res.json(); })
         .then(function (data) {
@@ -891,13 +999,20 @@
                 var navImg = document.querySelector('#navProfileCard img');
                 if (navImg) navImg.src = data.avatarUrl;
             }
-            if (data.encouragementText) document.getElementById('encouragementText').textContent = data.encouragementText;
-            if (data.encouragementSignature) document.getElementById('encouragementSignature').textContent = data.encouragementSignature;
+            var fb = [];
+            if (data.encouragementText) {
+                fb.push({
+                    text: data.encouragementText,
+                    signature: data.encouragementSignature || '匿名便签'
+                });
+            }
+            loadEncouragementFeed(fb);
             applySignInFromData(data);
             applyDailyMeditation(data.dailyMeditation);
         })
         .catch(function () {
             refreshSignInStatus();
+            loadEncouragementFeed([]);
         });
 
     document.getElementById('signInBtn').addEventListener('click', function () {
@@ -1036,19 +1151,112 @@
         }
         playSurpriseFlockIfPending();
 
-        function spawnSavedSurpriseFloat() {
+        var HOME_FLOAT_WHISPERS = (window.HOLLOW_HOME_WHISPERS && window.HOLLOW_HOME_WHISPERS.length)
+            ? window.HOLLOW_HOME_WHISPERS
+            : [
+                '愿你今晚的梦，像棉花糖一样轻。',
+                '深呼吸——这一秒只属于你自己。',
+                '风会停，雨会晴，你也是。'
+            ];
+        var HOME_FLOAT_LABELS = [
+            '曾经的惊喜',
+            '温柔一句',
+            '小屋彩蛋',
+            '今日寄语',
+            '轻声问候',
+            '每日轻声问候',
+            '星光絮语',
+            '信箱回声',
+            '暖心投递'
+        ];
+        var recentHomeFloatTexts = [];
+        var HOME_FLOAT_MIN_ACTIVE = 5;
+        var HOME_FLOAT_MAX_ACTIVE = 10;
+        var HOME_FLOAT_LANE_BOTTOM_PCTS = [8, 14, 20, 26, 32, 38, 44, 50, 17, 41];
+        function homeFloatActiveCount() {
+            return document.querySelectorAll('.home-surprise-mem-float').length;
+        }
+        function pickHomeFloatLaneIndex() {
+            var used = {};
+            var nodes = document.querySelectorAll('.home-surprise-mem-float[data-home-float-lane]');
+            for (var hi = 0; hi < nodes.length; hi++) {
+                var L = nodes[hi].getAttribute('data-home-float-lane');
+                if (L != null && L !== '') {
+                    used[L] = true;
+                }
+            }
+            var order = [];
+            var nl = HOME_FLOAT_LANE_BOTTOM_PCTS.length;
+            for (var hk = 0; hk < nl; hk++) {
+                order.push(hk);
+            }
+            order.sort(function () {
+                return Math.random() - 0.5;
+            });
+            for (var hj = 0; hj < order.length; hj++) {
+                var idx = order[hj];
+                if (!used[String(idx)]) {
+                    return idx;
+                }
+            }
+            return -1;
+        }
+        function pickHomeFloatPayload() {
+            var saved = [];
             try {
                 var a = JSON.parse(localStorage.getItem('hollowSurpriseCollection') || '[]');
-                if (!Array.isArray(a) || !a.length) {
+                if (Array.isArray(a)) {
+                    saved = a.filter(function (x) {
+                        return x && x.text;
+                    });
+                }
+            } catch (e0) { /* ignore */ }
+            if (saved.length && Math.random() < 0.48) {
+                var item = saved[Math.floor(Math.random() * saved.length)];
+                return { label: '曾经的惊喜', text: String(item.text).trim() };
+            }
+            var tx = HOME_FLOAT_WHISPERS[Math.floor(Math.random() * HOME_FLOAT_WHISPERS.length)];
+            var lab = Math.random() < 0.9 ? '曾经的惊喜' : HOME_FLOAT_LABELS[Math.floor(Math.random() * HOME_FLOAT_LABELS.length)];
+            return { label: lab, text: tx };
+        }
+        function spawnWelcomeFloatBubble() {
+            try {
+                if (typeof window.__hollowPathIsHome === 'function' && !window.__hollowPathIsHome()) {
                     return;
                 }
-                var item = a[Math.floor(Math.random() * a.length)];
-                if (!item || !item.text) {
+                var curN = homeFloatActiveCount();
+                if (curN >= HOME_FLOAT_MAX_ACTIVE) {
+                    window.setTimeout(spawnWelcomeFloatBubble, 800 + Math.floor(Math.random() * 1400));
                     return;
+                }
+                var lane = pickHomeFloatLaneIndex();
+                if (lane < 0) {
+                    var retryMs = curN < HOME_FLOAT_MIN_ACTIVE ? 200 + Math.floor(Math.random() * 280) : 700 + Math.floor(Math.random() * 1100);
+                    window.setTimeout(spawnWelcomeFloatBubble, retryMs);
+                    return;
+                }
+                var payload = pickHomeFloatPayload();
+                var tries = 0;
+                while (tries < 12 && recentHomeFloatTexts.indexOf(payload.text) >= 0) {
+                    payload = pickHomeFloatPayload();
+                    tries++;
+                }
+                recentHomeFloatTexts.push(payload.text);
+                if (recentHomeFloatTexts.length > 28) {
+                    recentHomeFloatTexts.shift();
                 }
                 var el = document.createElement('div');
                 el.className = 'home-surprise-mem-float';
+                el.setAttribute('data-home-float-lane', String(lane));
+                if (Math.random() < 0.35) {
+                    el.classList.add('home-surprise-mem-float--rise');
+                }
                 el.setAttribute('role', 'status');
+                var dur = 11 + Math.random() * 7;
+                el.style.animationDuration = dur + 's';
+                el.style.animationDelay = (Math.random() * 0.45) + 's';
+                var baseBottom = HOME_FLOAT_LANE_BOTTOM_PCTS[lane];
+                el.style.bottom = Math.max(4, Math.min(56, baseBottom + (Math.random() * 2.4 - 1.2))) + '%';
                 var lab = document.createElement('span');
                 lab.style.display = 'block';
                 lab.style.fontSize = '10px';
@@ -1057,29 +1265,119 @@
                 lab.style.textTransform = 'uppercase';
                 lab.style.color = 'rgba(147, 82, 82, 0.75)';
                 lab.style.marginBottom = '4px';
-                lab.textContent = '曾经的惊喜';
+                lab.textContent = payload.label;
                 var tx = document.createElement('span');
                 tx.style.display = 'block';
-                tx.textContent = item.text;
+                tx.textContent = payload.text;
                 el.appendChild(lab);
                 el.appendChild(tx);
-                el.style.bottom = 10 + Math.random() * 32 + '%';
-                el.style.left = '-24px';
+                if (el.classList.contains('home-surprise-mem-float--rise')) {
+                    el.style.left = (4 + Math.random() * 14) + 'vw';
+                } else {
+                    el.style.left = '-24px';
+                }
                 document.body.appendChild(el);
                 window.setTimeout(function () {
                     if (el.parentNode) {
                         el.parentNode.removeChild(el);
                     }
-                }, 14800);
+                }, Math.ceil((dur + 1.2) * 1000));
+                window.setTimeout(function () {
+                    if (homeFloatActiveCount() < HOME_FLOAT_MIN_ACTIVE) {
+                        spawnWelcomeFloatBubble();
+                    }
+                }, 220);
             } catch (e3) { /* ignore */ }
         }
-        window.setTimeout(spawnSavedSurpriseFloat, 5000 + Math.random() * 6000);
-        window.setInterval(spawnSavedSurpriseFloat, 56000 + Math.random() * 24000);
+        function seedHomeFloatMinimumSoon() {
+            var stagger = [40, 200, 420, 640, 860, 1080];
+            for (var si = 0; si < stagger.length; si++) {
+                window.setTimeout(spawnWelcomeFloatBubble, stagger[si]);
+            }
+        }
+        function scheduleHomeFloatWelcomeBurst() {
+            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                seedHomeFloatMinimumSoon();
+                return;
+            }
+            seedHomeFloatMinimumSoon();
+            var burst = [800, 2600, 5200, 9000, 14000, 20500, 28500];
+            burst.forEach(function (ms) {
+                window.setTimeout(spawnWelcomeFloatBubble, ms + Math.floor(Math.random() * 520));
+            });
+        }
+        scheduleHomeFloatWelcomeBurst();
+        var homeFloatIntervalSpawn = window.setInterval(spawnWelcomeFloatBubble, 26000 + Math.random() * 10000);
+        var homeFloatIntervalMin = window.setInterval(function () {
+            if (homeFloatActiveCount() < HOME_FLOAT_MIN_ACTIVE) {
+                spawnWelcomeFloatBubble();
+            }
+        }, 600);
+        if (typeof window.__hollowRegisterTurboCleanup === 'function') {
+            window.__hollowRegisterTurboCleanup(function () {
+                window.clearInterval(homeFloatIntervalSpawn);
+                window.clearInterval(homeFloatIntervalMin);
+                document.querySelectorAll('.home-surprise-mem-float').forEach(function (n) {
+                    if (n.parentNode) {
+                        n.parentNode.removeChild(n);
+                    }
+                });
+                var flockLayer = document.getElementById('homeSurpriseFlockLayer');
+                if (flockLayer && flockLayer.parentNode) {
+                    flockLayer.parentNode.removeChild(flockLayer);
+                }
+            });
+        }
     })();
 
     (function initTimeEchoStickyNotes() {
+        var HOME_ECHO_SEED = window.HOLLOW_HOME_ECHO_SEED || [];
+        var echoHomeSlotI = 0;
+        /* 四角分散，避免与随机抖动叠成「重影」 */
+        var ECHO_HOME_SLOTS = [
+            { top: '6%', left: '4%', right: 'auto', bottom: 'auto' },
+            { top: '8%', right: '4%', left: 'auto', bottom: 'auto' },
+            { top: '38%', left: '5%', right: 'auto', bottom: 'auto' },
+            { top: '40%', right: '6%', left: 'auto', bottom: 'auto' }
+        ];
+        function pickEchoTextForSticky() {
+            try {
+                if (window.HollowTimeEcho && HollowTimeEcho.count() > 0 && Math.random() < 0.58) {
+                    var e = HollowTimeEcho.getRandom();
+                    if (e && e.text) {
+                        return String(e.text).trim();
+                    }
+                }
+            } catch (e0) { /* ignore */ }
+            if (HOME_ECHO_SEED.length) {
+                return HOME_ECHO_SEED[Math.floor(Math.random() * HOME_ECHO_SEED.length)];
+            }
+            return '慢慢来，你比昨天又多了一点温柔。';
+        }
+        var ECHO_STICKY_MAX_IN_CARD = 2;
+        var ECHO_STICKY_MAX_ON_BODY = 2;
+        function pruneHomeEchoStickies(host) {
+            var sel = '.home-echo-note-float';
+            var maxN = host ? ECHO_STICKY_MAX_IN_CARD : ECHO_STICKY_MAX_ON_BODY;
+            var nodes;
+            if (host) {
+                nodes = host.querySelectorAll(sel);
+            } else {
+                nodes = document.querySelectorAll('body > ' + sel);
+            }
+            while (nodes.length >= maxN) {
+                var first = nodes[0];
+                if (first && first.parentNode) {
+                    first.parentNode.removeChild(first);
+                }
+                nodes = host ? host.querySelectorAll(sel) : document.querySelectorAll('body > ' + sel);
+            }
+        }
         function spawnEchoSticky(text) {
-            if (!text || !window.HollowTimeEcho) {
+            if (!text) {
+                return;
+            }
+            if (typeof window.__hollowPathIsHome === 'function' && !window.__hollowPathIsHome()) {
                 return;
             }
             var el = document.createElement('div');
@@ -1099,21 +1397,44 @@
             tx.textContent = text;
             el.appendChild(lab);
             el.appendChild(tx);
-            var corner = Math.floor(Math.random() * 4);
-            if (corner === 0) {
-                el.style.left = 12 + Math.random() * 18 + '%';
-                el.style.top = 14 + Math.random() * 16 + '%';
-            } else if (corner === 1) {
-                el.style.right = 10 + Math.random() * 16 + '%';
-                el.style.top = 18 + Math.random() * 14 + '%';
-            } else if (corner === 2) {
-                el.style.left = 8 + Math.random() * 20 + '%';
-                el.style.bottom = 16 + Math.random() * 18 + '%';
+            var host = document.getElementById('dmJourneyCard');
+            if (host) {
+                pruneHomeEchoStickies(host);
+                host.appendChild(el);
+                el.style.left = '';
+                el.style.right = '';
+                el.style.top = '';
+                el.style.bottom = '';
+                var slot = ECHO_HOME_SLOTS[echoHomeSlotI % ECHO_HOME_SLOTS.length];
+                echoHomeSlotI++;
+                var jt = parseFloat(String(slot.top).replace('%', '')) + (Math.random() * 1.4 - 0.7);
+                el.style.top = jt + '%';
+                el.style.bottom = 'auto';
+                if (slot.left !== 'auto') {
+                    el.style.left = (parseFloat(String(slot.left).replace('%', '')) + (Math.random() * 1.8 - 0.9)) + '%';
+                    el.style.right = 'auto';
+                } else {
+                    el.style.right = (parseFloat(String(slot.right).replace('%', '')) + (Math.random() * 1.8 - 0.9)) + '%';
+                    el.style.left = 'auto';
+                }
             } else {
-                el.style.right = 8 + Math.random() * 18 + '%';
-                el.style.bottom = 14 + Math.random() * 16 + '%';
+                var corner = Math.floor(Math.random() * 4);
+                if (corner === 0) {
+                    el.style.left = 12 + Math.random() * 18 + '%';
+                    el.style.top = 14 + Math.random() * 16 + '%';
+                } else if (corner === 1) {
+                    el.style.right = 10 + Math.random() * 16 + '%';
+                    el.style.top = 18 + Math.random() * 14 + '%';
+                } else if (corner === 2) {
+                    el.style.left = 8 + Math.random() * 20 + '%';
+                    el.style.bottom = 16 + Math.random() * 18 + '%';
+                } else {
+                    el.style.right = 8 + Math.random() * 18 + '%';
+                    el.style.bottom = 14 + Math.random() * 16 + '%';
+                }
+                pruneHomeEchoStickies(null);
+                document.body.appendChild(el);
             }
-            document.body.appendChild(el);
             window.setTimeout(function () {
                 if (el.parentNode) {
                     el.parentNode.removeChild(el);
@@ -1121,21 +1442,48 @@
             }, 16800);
         }
         window.__hollowSpawnEchoStickyNote = function (text) {
+            if (typeof window.__hollowPathIsHome === 'function' && !window.__hollowPathIsHome()) {
+                return;
+            }
             spawnEchoSticky(text);
         };
         function tick() {
             try {
-                if (!window.HollowTimeEcho || HollowTimeEcho.count() < 1) {
+                if (typeof window.__hollowPathIsHome === 'function' && !window.__hollowPathIsHome()) {
                     return;
                 }
-                var e = HollowTimeEcho.getRandom();
-                if (e && e.text) {
-                    spawnEchoSticky(e.text);
+                var t = pickEchoTextForSticky();
+                if (t) {
+                    spawnEchoSticky(t);
                 }
             } catch (e) { /* ignore */ }
         }
-        window.setTimeout(tick, 9000 + Math.random() * 7000);
-        window.setInterval(tick, 72000 + Math.random() * 28000);
+        function tryEarlyEchoOnce() {
+            try {
+                if (typeof window.__hollowPathIsHome === 'function' && !window.__hollowPathIsHome()) {
+                    return;
+                }
+                var t = pickEchoTextForSticky();
+                if (t) {
+                    spawnEchoSticky(t);
+                }
+            } catch (e2) { /* ignore */ }
+        }
+        window.setTimeout(tryEarlyEchoOnce, 2400 + Math.random() * 900);
+        window.setTimeout(tick, 5200 + Math.random() * 3800);
+        window.setTimeout(tick, 8200 + Math.random() * 3200);
+        window.setTimeout(tick, 12000 + Math.random() * 5000);
+        var homeEchoIntervalId = window.setInterval(tick, 36000 + Math.random() * 16000);
+        if (typeof window.__hollowRegisterTurboCleanup === 'function') {
+            window.__hollowRegisterTurboCleanup(function () {
+                window.clearInterval(homeEchoIntervalId);
+                document.querySelectorAll('.home-echo-note-float').forEach(function (n) {
+                    if (n.parentNode) {
+                        n.parentNode.removeChild(n);
+                    }
+                });
+            });
+        }
     })();
 </script>
 </body>

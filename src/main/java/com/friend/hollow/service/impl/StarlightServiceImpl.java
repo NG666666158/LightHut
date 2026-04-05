@@ -11,6 +11,8 @@ import com.friend.hollow.repository.MemoryRepository;
 import com.friend.hollow.service.StarlightService;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,8 +28,12 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -39,6 +45,61 @@ public class StarlightServiceImpl implements StarlightService {
 
     private static final List<String> ALLOWED_IMAGE_TYPES = List.of(
             "image/jpeg", "image/png", "image/webp", "image/gif"
+    );
+
+    /**
+     * 演示回忆文案与版式（循环使用）；配图来自 classpath static/images/starlight-wall/memory-*。
+     */
+    private static final List<DemoPreset> DEMO_PRESETS = List.of(
+            new DemoPreset(
+                    "在大理洱海的那个午后",
+                    null,
+                    MemoryCategory.TRAVEL,
+                    LocalDate.of(2023, 10, 15),
+                    List.of("小雨", "阿强"),
+                    MemoryLayout.HERO
+            ),
+            new DemoPreset(
+                    "重聚的拥抱",
+                    "两年没见，你还是那个爱大笑的女孩。我们在老操场坐了很久，聊着那些回不去的青葱岁月。",
+                    MemoryCategory.DAILY,
+                    LocalDate.of(2024, 2, 12),
+                    List.of(),
+                    MemoryLayout.MEDIUM
+            ),
+            new DemoPreset(
+                    "周末的拿铁时光",
+                    null,
+                    MemoryCategory.DAILY,
+                    LocalDate.of(2024, 3, 20),
+                    List.of(),
+                    MemoryLayout.COMPACT
+            ),
+            new DemoPreset(
+                    "草莓音乐节狂欢",
+                    null,
+                    MemoryCategory.SPORT,
+                    LocalDate.of(2023, 5, 2),
+                    List.of(),
+                    MemoryLayout.COMPACT
+            )
+    );
+
+    private record DemoPreset(
+            String title,
+            String description,
+            MemoryCategory category,
+            LocalDate eventDate,
+            List<String> companions,
+            MemoryLayout layout
+    ) {}
+
+    /** 与 DEMO_PRESETS 标题一致；用于识别库里旧的打包演示行并替换配图（不动上传目录 /uploads）。 */
+    private static final Set<String> BUNDLED_DEMO_TITLES = Set.of(
+            "在大理洱海的那个午后",
+            "重聚的拥抱",
+            "周末的拿铁时光",
+            "草莓音乐节狂欢"
     );
 
     private final Path uploadRoot;
@@ -57,7 +118,108 @@ public class StarlightServiceImpl implements StarlightService {
         Files.createDirectories(uploadRoot);
         if (memoryRepository.findAll().isEmpty()) {
             seedDemoMemories();
+        } else {
+            migrateBundledStarlightWallImages();
+            dedupeMemoriesByTitleAndImage();
         }
+    }
+
+    /**
+     * 库中已有旧版演示数据（如 /images/starlight-seed-*.jpg）时，启动时改为 starlight-wall 配图并补全更多张；
+     * 已指向 /images/starlight-wall/ 的行不再改动，避免重复迁移。
+     */
+    private void migrateBundledStarlightWallImages() {
+        List<String> urls = listClasspathStarlightWallImages();
+        if (urls.isEmpty()) {
+            return;
+        }
+        List<MemoryRecord> bundledRows = memoryRepository.findAll().stream()
+                .filter(this::isBundledDemoMemoryForMigration)
+                .sorted(Comparator
+                        .comparing(MemoryRecord::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(MemoryRecord::getId, Comparator.nullsLast(Comparator.naturalOrder())))
+                .collect(Collectors.toList());
+        if (bundledRows.isEmpty()) {
+            return;
+        }
+        int n = urls.size();
+        for (int i = 0; i < bundledRows.size() && i < n; i++) {
+            MemoryRecord m = bundledRows.get(i);
+            String next = urls.get(i);
+            if (!next.equals(m.getImageUrl())) {
+                m.setImageUrl(next);
+                memoryRepository.save(m);
+            }
+        }
+        // 仅当确实存在「待迁移的旧演示行」时，才为多余的 classpath 配图补行；否则 bundledRows 为空会误把整墙再 seed 一遍（重复展示）。
+        if (!bundledRows.isEmpty() && bundledRows.size() < n) {
+            Instant base = Instant.now();
+            for (int u = bundledRows.size(); u < n; u++) {
+                DemoPreset p = DEMO_PRESETS.get(u % DEMO_PRESETS.size());
+                addSeed(
+                        p.title(),
+                        p.description(),
+                        urls.get(u),
+                        p.category(),
+                        p.eventDate(),
+                        p.companions(),
+                        p.layout(),
+                        base.minusSeconds((long) (n - u) * 10L)
+                );
+            }
+        }
+    }
+
+    /**
+     * 清理历史版本中每次启动重复插入的演示数据（相同标题 + 相同图片 URL 只保留 id 最小的一条）。
+     */
+    private void dedupeMemoriesByTitleAndImage() {
+        List<MemoryRecord> all = new ArrayList<>(memoryRepository.findAll());
+        Map<String, List<MemoryRecord>> groups = new LinkedHashMap<>();
+        for (MemoryRecord m : all) {
+            String t = m.getTitle();
+            String u = m.getImageUrl();
+            if (!StringUtils.hasText(t) || !StringUtils.hasText(u)) {
+                continue;
+            }
+            String key = t.trim() + "\0" + u.trim();
+            groups.computeIfAbsent(key, k -> new ArrayList<>()).add(m);
+        }
+        List<Long> toDelete = new ArrayList<>();
+        for (List<MemoryRecord> group : groups.values()) {
+            if (group.size() <= 1) {
+                continue;
+            }
+            group.sort(Comparator.comparing(MemoryRecord::getId, Comparator.nullsLast(Comparator.naturalOrder())));
+            for (int i = 1; i < group.size(); i++) {
+                Long id = group.get(i).getId();
+                if (id != null) {
+                    toDelete.add(id);
+                }
+            }
+        }
+        for (Long id : toDelete) {
+            memoryRepository.deleteById(id);
+        }
+    }
+
+    /**
+     * 内置四套标题 + 尚未使用 starlight-wall、且非用户上传到 /uploads 的，一律视为待替换的旧演示行
+     * （含外链占位图、旧 starlight-seed 路径等）。
+     */
+    private boolean isBundledDemoMemoryForMigration(MemoryRecord m) {
+        String t = m.getTitle();
+        if (t == null || !BUNDLED_DEMO_TITLES.contains(t.trim())) {
+            return false;
+        }
+        String url = m.getImageUrl();
+        if (url != null && url.startsWith("/images/starlight-wall/")) {
+            return false;
+        }
+        if (url != null && url.startsWith("/uploads/")) {
+            return false;
+        }
+        return true;
     }
 
     @Override
@@ -290,6 +452,60 @@ public class StarlightServiceImpl implements StarlightService {
     }
 
     private void seedDemoMemories() {
+        List<String> imageUrls = listClasspathStarlightWallImages();
+        if (imageUrls.isEmpty()) {
+            seedLegacyDemoMemories();
+            return;
+        }
+        Instant base = Instant.now();
+        int n = imageUrls.size();
+        for (int i = 0; i < n; i++) {
+            DemoPreset p = DEMO_PRESETS.get(i % DEMO_PRESETS.size());
+            addSeed(
+                    p.title(),
+                    p.description(),
+                    imageUrls.get(i),
+                    p.category(),
+                    p.eventDate(),
+                    p.companions(),
+                    p.layout(),
+                    base.minusSeconds((long) (n - i) * 10L)
+            );
+        }
+    }
+
+    private List<String> listClasspathStarlightWallImages() {
+        PathMatchingResourcePatternResolver resolver =
+                new PathMatchingResourcePatternResolver(StarlightServiceImpl.class.getClassLoader());
+        Resource[] resources;
+        try {
+            resources = resolver.getResources("classpath*:static/images/starlight-wall/memory-*");
+        } catch (IOException e) {
+            return List.of();
+        }
+        return Arrays.stream(resources)
+                .map(Resource::getFilename)
+                .filter(Objects::nonNull)
+                .filter(name -> name.matches("memory-\\d+\\.[^.]+"))
+                .sorted(Comparator.comparingInt(StarlightServiceImpl::memoryFileOrder))
+                .map(name -> "/images/starlight-wall/" + name)
+                .collect(Collectors.toList());
+    }
+
+    private static int memoryFileOrder(String filename) {
+        int dot = filename.indexOf('.');
+        if (dot <= "memory-".length()) {
+            return 0;
+        }
+        try {
+            return Integer.parseInt(filename.substring("memory-".length(), dot));
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    /** 无 starlight-wall 资源时的回退（旧路径）。 */
+    private void seedLegacyDemoMemories() {
         Instant base = Instant.now();
         addSeed(
                 "在大理洱海的那个午后",

@@ -7,30 +7,49 @@
 
     <th:block th:replace="~{fragments/common-head :: coreDeps()}"></th:block>
     <style>
-        body {
-            margin: 0;
-            min-height: 100vh;
-            min-height: 100dvh;
-            width: 100%;
-            max-width: 100vw;
-            overflow-x: hidden;
-            overflow-y: auto;
-            font-family: 'Be Vietnam Pro', sans-serif;
-            background-color: #fffcf7;
-            color: #373831;
+        /* Pinterest 式瀑布流：按原图比例完整展示，不裁切；大屏 5 列更紧凑 */
+        .memory-masonry {
+            column-count: 1;
+            column-gap: 1rem;
         }
-
-        .font-headline { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        @media (min-width: 640px) {
+            .memory-masonry { column-count: 2; column-gap: 1.1rem; }
+        }
+        @media (min-width: 768px) {
+            .memory-masonry { column-count: 3; column-gap: 1.15rem; }
+        }
+        @media (min-width: 1024px) {
+            .memory-masonry { column-count: 4; column-gap: 1.2rem; }
+        }
+        @media (min-width: 1280px) {
+            .memory-masonry { column-count: 5; column-gap: 1.25rem; }
+        }
+        .memory-masonry .memory-card {
+            break-inside: avoid;
+            page-break-inside: avoid;
+            -webkit-column-break-inside: avoid;
+            margin-bottom: 1.15rem;
+            display: inline-block;
+            width: 100%;
+            vertical-align: top;
+        }
+        .memory-card--hero {
+            -webkit-column-span: all;
+            column-span: all;
+        }
+        .memory-card__media img {
+            display: block;
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
     </style>
 </head>
 <body class="flex min-h-screen w-full max-w-full flex-col overflow-x-hidden bg-background text-on-surface selection:bg-primary-container selection:text-on-primary-container lg:flex-row">
     <nav th:replace="~{fragments/layout :: sidebar('starlight')}"></nav>
 
     <!-- 主内容区 -->
-    <main class="relative flex min-h-screen min-w-0 w-full flex-1 flex-col overflow-y-auto bg-surface lg:ml-72">
+    <main class="relative flex min-h-screen min-w-0 w-full flex-1 flex-col overflow-y-auto bg-surface hollow-main-scroll lg:ml-72">
         <header th:replace="~{fragments/layout :: topbar(activeTopNav='none')}"></header>
 
         <!-- 星光墙主体 -->
@@ -69,15 +88,12 @@
             <p id="memoryLoading" class="text-on-surface-variant text-sm hidden">加载中…</p>
             <p id="memoryError" class="text-error text-sm hidden"></p>
 
-            <section id="memoryGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <section id="memoryGrid" class="memory-masonry">
             </section>
 
-            <div class="flex justify-center mt-10 mb-2">
-                <button type="button" id="btnLoadMore" class="px-10 py-3 rounded-full border-2 border-primary/20 text-primary font-semibold hover:bg-primary/5 transition-colors flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
-                    查看更多往事
-                    <span class="material-symbols-outlined">expand_more</span>
-                </button>
-            </div>
+            <!-- 滚入视口（主栏滚动容器）时自动拉取下一页 -->
+            <div id="memoryScrollSentinel" class="min-h-[8px] w-full shrink-0" aria-hidden="true"></div>
+            <p id="memoryEndHint" class="hidden text-center text-sm text-on-surface-variant py-8 pb-12">已展示全部回忆</p>
         </div>
     </main>
 
@@ -150,7 +166,10 @@
     var API_LIST = '/api/starlight/memories';
     var API_CREATE = '/api/starlight/memories';
     var API_DELETE = '/api/starlight/memories/';
-    var PAGE_SIZE = 6;
+    /** 首屏多放一些，减少「先几行、滚了才出全」的分段感 */
+    var PAGE_SIZE = 18;
+    var VIEWPORT_PREFILL_MAX = 8;
+    var viewportPrefillCount = 0;
 
     var state = {
         category: 'ALL',
@@ -163,6 +182,20 @@
         loadedItems: [],
         previewIndex: -1
     };
+
+    function shuffleArray(arr) {
+        var a = arr;
+        var i;
+        var j;
+        var t;
+        for (i = a.length - 1; i > 0; i--) {
+            j = Math.floor(Math.random() * (i + 1));
+            t = a[i];
+            a[i] = a[j];
+            a[j] = t;
+        }
+        return a;
+    }
 
     function escapeHtml(s) {
         if (s == null) return '';
@@ -185,6 +218,10 @@
         return ' · 与 ' + companions.map(function (c) { return escapeHtml(c); }).join(', ');
     }
 
+    function isGifUrl(url) {
+        return /\.gif(\?|#|$)/i.test(url || '');
+    }
+
     function renderCard(item, index) {
         var layout = item.layout || 'COMPACT';
         var title = escapeHtml(item.title);
@@ -193,41 +230,50 @@
         var catBadge = escapeHtml(item.categoryLabel || '') + '回忆';
         var comp = companionLine(item.companions);
         var imgUrl = escapeHtml(item.imageUrl);
+        var rawUrl = item.imageUrl || '';
         var commonCardMeta = ' data-memory-id="' + item.id + '" data-preview-index="' + index + '"';
         var actionBar =
-            '<div class="absolute top-3 right-3 z-10">' +
+            '<div class="absolute top-3 right-3 z-20">' +
             '<button type="button" class="delete-memory-btn px-3 py-1.5 rounded-full bg-black/45 text-white text-xs hover:bg-black/60 transition" data-memory-id="' + item.id + '">删除</button>' +
             '</div>';
+        var gifBadge = isGifUrl(rawUrl)
+            ? '<span class="absolute left-2.5 top-2.5 z-[15] rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-on-surface shadow-sm">GIF</span>'
+            : '';
+        var isHero = layout === 'HERO';
+        var heroClass = isHero ? ' memory-card--hero' : '';
 
-        if (layout === 'HERO') {
-            return '<div class="memory-card lg:col-span-2 relative group overflow-hidden rounded-xl h-[450px]"' + commonCardMeta + '>' +
-                actionBar +
-                '<img alt="" class="memory-preview-trigger w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 cursor-zoom-in" src="' + imgUrl + '"/>' +
-                '<div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>' +
-                '<div class="absolute bottom-0 left-0 p-8 text-white w-full">' +
-                '<span class="inline-block px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-medium mb-3 uppercase tracking-wider">' + catBadge + '</span>' +
-                '<h3 class="text-3xl font-bold font-headline mb-2">' + title + '</h3>' +
-                '<p class="text-white/80 text-sm">' + dateStr + comp + '</p>' +
-                '</div></div>';
-        }
-        if (layout === 'MEDIUM') {
-            return '<div class="memory-card relative group bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden h-[450px]"' + commonCardMeta + '>' +
-                actionBar +
-                '<img alt="" class="memory-preview-trigger w-full h-2/3 object-cover cursor-zoom-in" src="' + imgUrl + '"/>' +
-                '<div class="p-6">' +
-                '<h3 class="font-headline font-bold text-lg text-on-surface">' + title + '</h3>' +
-                '<p class="text-outline text-xs mt-1">' + dateStr + '</p>' +
-                (desc ? '<p class="text-sm text-on-surface-variant mt-4 leading-relaxed">' + desc + '</p>' : '') +
-                '</div></div>';
-        }
-        return '<div class="memory-card bg-surface-container-lowest p-5 rounded-lg group hover:shadow-lg transition-all duration-300 relative"' + commonCardMeta + '>' +
-            actionBar +
-            '<div class="relative overflow-hidden rounded-lg mb-4 aspect-video">' +
-            '<img alt="" class="memory-preview-trigger w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 cursor-zoom-in" src="' + imgUrl + '"/>' +
-            '</div>' +
-            '<h4 class="font-headline font-semibold text-on-surface mb-1">' + title + '</h4>' +
-            '<p class="text-xs text-outline">' + dateStr + '</p>' +
+        var heroOverlay =
+            '<div class="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent px-5 pb-5 pt-16 sm:px-8 sm:pb-6 sm:pt-20">' +
+            '<span class="mb-2 inline-block rounded-full bg-white/20 px-3 py-1 text-[10px] font-medium uppercase tracking-wider text-white backdrop-blur-sm">' + catBadge + '</span>' +
+            '<h3 class="font-headline text-xl font-bold leading-tight text-white drop-shadow-md sm:text-2xl md:text-3xl">' + title + '</h3>' +
+            '<p class="mt-1 text-sm text-white/90">' + dateStr + comp + '</p>' +
             '</div>';
+
+        var textBelow =
+            '<div class="p-5 sm:p-6">' +
+            '<span class="mb-2 inline-block rounded-full bg-primary-container/35 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-on-primary-container">' + catBadge + '</span>' +
+            '<h3 class="font-headline text-lg font-bold text-on-surface sm:text-xl">' + title + '</h3>' +
+            '<p class="mt-1 text-xs text-outline">' + dateStr + comp + '</p>' +
+            (layout === 'MEDIUM' && desc ? '<p class="mt-3 text-sm leading-relaxed text-on-surface-variant">' + desc + '</p>' : '') +
+            '</div>';
+
+        return (
+            '<article class="memory-card memory-masonry-card group relative overflow-hidden rounded-xl bg-surface-container-lowest shadow-sm transition-shadow duration-300 hover:shadow-xl' +
+            heroClass +
+            '"' +
+            commonCardMeta +
+            '>' +
+            actionBar +
+            '<div class="memory-card__media relative bg-surface-container">' +
+            gifBadge +
+            '<img alt="" class="memory-preview-trigger w-full cursor-zoom-in select-none" src="' +
+            imgUrl +
+            '"/>' +
+            (isHero ? heroOverlay : '') +
+            '</div>' +
+            (isHero ? '' : textBelow) +
+            '</article>'
+        );
     }
 
     function applySortMode() {
@@ -274,6 +320,7 @@
         if (reset) {
             state.page = 0;
             state.loadedItems = [];
+            viewportPrefillCount = 0;
             grid.innerHTML = '';
         }
         var params = new URLSearchParams();
@@ -290,13 +337,14 @@
             })
             .then(function (data) {
                 var before = state.loadedItems.length;
-                data.items.forEach(function (item, idx) {
+                var batch = shuffleArray(data.items.slice());
+                batch.forEach(function (item, idx) {
                     state.loadedItems.push(item);
                     grid.insertAdjacentHTML('beforeend', renderCard(item, before + idx));
                 });
                 state.hasMore = data.hasMore;
                 state.page = data.page + 1;
-                document.getElementById('btnLoadMore').disabled = !data.hasMore;
+                syncEndHintVisibility();
             })
             .catch(function (e) {
                 errEl.textContent = e.message || '网络错误';
@@ -305,7 +353,106 @@
             .finally(function () {
                 state.loading = false;
                 loadingEl.classList.add('hidden');
+                scheduleMaybeLoadMore();
+                requestAnimationFrame(function () {
+                    requestAnimationFrame(tryPrefillMoreForViewport);
+                });
             });
+    }
+
+    /** 首屏高度不足时自动续拉，避免只靠滚动哨兵、图片撑高后才触发 */
+    function tryPrefillMoreForViewport() {
+        if (state.loading || !state.hasMore) {
+            return;
+        }
+        if (viewportPrefillCount >= VIEWPORT_PREFILL_MAX) {
+            return;
+        }
+        var el = document.getElementById('memoryScrollSentinel');
+        if (!el) {
+            return;
+        }
+        var r = el.getBoundingClientRect();
+        var h = window.innerHeight || document.documentElement.clientHeight || 720;
+        if (r.top <= h * 2.6) {
+            viewportPrefillCount++;
+            loadPage(false);
+        }
+    }
+
+    var _scrollDebounceTimer;
+    function scheduleMaybeLoadMore() {
+        if (typeof requestAnimationFrame !== 'undefined') {
+            requestAnimationFrame(function () {
+                requestAnimationFrame(maybeLoadMoreIfNearViewport);
+            });
+        } else {
+            maybeLoadMoreIfNearViewport();
+        }
+    }
+
+    /** 视口或任意滚动容器下，哨兵接近可见区域则拉下一页（兜底 IO 在 loading 期间跳过后再不触发的问题） */
+    function maybeLoadMoreIfNearViewport() {
+        if (state.loading || !state.hasMore) return;
+        var el = document.getElementById('memoryScrollSentinel');
+        if (!el) return;
+        var r = el.getBoundingClientRect();
+        var h = window.innerHeight || document.documentElement.clientHeight || 0;
+        var margin = 400;
+        if (r.top < h + margin && r.bottom > -margin) {
+            loadPage(false);
+        }
+    }
+
+    function syncEndHintVisibility() {
+        var endHint = document.getElementById('memoryEndHint');
+        if (!endHint) return;
+        if (!state.hasMore && state.loadedItems.length > 0) {
+            endHint.classList.remove('hidden');
+        } else {
+            endHint.classList.add('hidden');
+        }
+    }
+
+    function armInfiniteScroll() {
+        var sentinel = document.getElementById('memoryScrollSentinel');
+        if (!sentinel || typeof IntersectionObserver === 'undefined') {
+            return;
+        }
+        // root 用视口：移动端往往是整页滚动；桌面端 main 内滚动时，哨兵相对视口位置仍会变化
+        var obs = new IntersectionObserver(
+            function (entries) {
+                entries.forEach(function (en) {
+                    if (!en.isIntersecting) return;
+                    maybeLoadMoreIfNearViewport();
+                });
+            },
+            { root: null, rootMargin: '0px 0px 480px 0px', threshold: 0 }
+        );
+        obs.observe(sentinel);
+
+        function onScrollDebounced() {
+            clearTimeout(_scrollDebounceTimer);
+            _scrollDebounceTimer = setTimeout(maybeLoadMoreIfNearViewport, 60);
+        }
+        window.addEventListener('scroll', onScrollDebounced, { passive: true });
+        var mainEl = document.querySelector('main');
+        if (mainEl) {
+            mainEl.addEventListener('scroll', onScrollDebounced, { passive: true });
+        }
+        if (typeof window.__hollowRegisterTurboCleanup === 'function') {
+            window.__hollowRegisterTurboCleanup(function () {
+                try {
+                    obs.disconnect();
+                } catch (e) {
+                    /* ignore */
+                }
+                window.removeEventListener('scroll', onScrollDebounced, { passive: true });
+                if (mainEl) {
+                    mainEl.removeEventListener('scroll', onScrollDebounced, { passive: true });
+                }
+            });
+        }
     }
 
     document.querySelectorAll('.cat-tab').forEach(function (btn) {
@@ -325,10 +472,6 @@
         state.sortMode = (state.sortMode + 1) % 4;
         applySortMode();
         loadPage(true);
-    });
-
-    document.getElementById('btnLoadMore').addEventListener('click', function () {
-        if (state.hasMore && !state.loading) loadPage(false);
     });
 
     document.getElementById('memoryGrid').addEventListener('click', function (e) {
@@ -456,14 +599,21 @@
         if (Math.abs(e.deltaY) < 2) return;
         shiftPreview(e.deltaY > 0 ? 1 : -1);
     }, { passive: false });
-    window.addEventListener('keydown', function (e) {
+    function starlightPreviewKeydown(e) {
         if (previewModal.classList.contains('hidden')) return;
         if (e.key === 'Escape') closePreview();
         if (e.key === 'ArrowRight') shiftPreview(1);
         if (e.key === 'ArrowLeft') shiftPreview(-1);
-    });
+    }
+    window.addEventListener('keydown', starlightPreviewKeydown);
+    if (typeof window.__hollowRegisterTurboCleanup === 'function') {
+        window.__hollowRegisterTurboCleanup(function () {
+            window.removeEventListener('keydown', starlightPreviewKeydown);
+        });
+    }
 
     applySortMode();
+    armInfiniteScroll();
     loadPage(true);
 })();
 </script>

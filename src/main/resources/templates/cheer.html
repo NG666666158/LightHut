@@ -7,21 +7,6 @@
 
     <th:block th:replace="~{fragments/common-head :: coreDeps()}"></th:block>
     <style>
-        body {
-            margin: 0;
-            min-height: 100vh;
-            min-height: 100dvh;
-            width: 100%;
-            max-width: 100vw;
-            overflow-x: hidden;
-            overflow-y: auto;
-            font-family: 'Be Vietnam Pro', sans-serif;
-            background-color: #fffcf7;
-            color: #373831;
-        }
-
-        .font-headline { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
         .bg-soft-gradient { background: linear-gradient(135deg, #fffcf7 0%, #fcf4f4 100%); }
         .bg-primary-gradient { background: linear-gradient(45deg, #935252 0%, #fdabab 100%); }
         .glass-card { backdrop-filter: blur(20px); background-color: rgba(252, 249, 243, 0.6); }
@@ -1178,13 +1163,43 @@
             outline: 2px solid rgba(147, 82, 82, 0.55);
             outline-offset: 3px;
         }
+        /* 「我累了」静心音乐：点击音符爆发 */
+        @keyframes tired-music-note-burst {
+            0% {
+                transform: translate(-50%, -50%) scale(0.2) rotate(var(--rot, 0deg));
+                opacity: 1;
+                filter: blur(0);
+            }
+            100% {
+                transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, -120px))) scale(1.15) rotate(calc(var(--rot, 0deg) + 45deg));
+                opacity: 0;
+                filter: blur(0.5px);
+            }
+        }
+        .tired-music-burst-note {
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 12040;
+            pointer-events: none;
+            font-size: clamp(1.1rem, 3.5vw, 1.65rem);
+            line-height: 1;
+            text-shadow: 0 0 12px rgba(200, 220, 255, 0.9), 0 0 24px rgba(180, 200, 255, 0.5);
+            animation: tired-music-note-burst 1.05s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            will-change: transform, opacity;
+        }
+        #tiredMusicSpectrumWrap {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(230, 240, 255, 0.12) 100%);
+            border: 1px solid rgba(200, 220, 245, 0.25);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+        }
     </style>
 </head>
 
 <body class="flex min-h-screen w-full max-w-full flex-col overflow-x-hidden bg-background font-body text-on-surface selection:bg-primary-fixed selection:text-on-primary-container lg:flex-row">
     <nav th:replace="~{fragments/layout :: sidebar('cheer')}"></nav>
 
-    <main class="relative z-10 flex min-h-screen min-w-0 w-full flex-1 flex-col overflow-y-auto bg-surface lg:ml-72">
+    <main class="relative z-10 flex min-h-screen min-w-0 w-full flex-1 flex-col overflow-y-auto bg-surface hollow-main-scroll lg:ml-72">
         <header th:replace="~{fragments/layout :: topbar(activeTopNav='none')}"></header>
 
         <!-- 打气站主体：保留你提供的内容块 -->
@@ -1244,7 +1259,7 @@
                                     <div class="relative aspect-[4/3] w-full overflow-hidden rounded-xl shadow-2xl shadow-primary/20">
                                         <img alt="柔软治愈的拥抱与陪伴"
                                              class="h-full w-full scale-105 object-cover transition-transform duration-1000 group-hover:scale-100"
-                                             src="/images/cheer-tired.jpg" loading="lazy" decoding="async"/>
+                                             src="/images/cheer-hug.png" loading="lazy" decoding="async"/>
                                         <div class="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-t from-primary/10 to-transparent"></div>
                                         <button type="button" id="hugIllustrationBtn"
                                                 class="absolute inset-0 z-[2] cursor-pointer border-0 bg-transparent p-0"
@@ -1314,7 +1329,7 @@
                                     <div class="relative aspect-[4/3] w-full overflow-hidden rounded-xl shadow-2xl shadow-secondary/20">
                                         <img alt="暮色里一盏暖灯、窗外柔和月光的安静房间"
                                              class="h-full w-full object-cover"
-                                             src="/images/cheer-happy.jpg" loading="lazy" decoding="async"/>
+                                             src="/images/cheer-tired.png" loading="lazy" decoding="async"/>
                                         <div class="pointer-events-none absolute inset-0 z-[1] bg-secondary/20 backdrop-blur-[2px] transition-all duration-700"></div>
                                         <button type="button" id="tiredRestHeroBtn"
                                                 class="absolute inset-0 z-[2] cursor-pointer border-0 bg-transparent p-0"
@@ -1324,6 +1339,11 @@
                                             <span class="material-symbols-outlined mb-1 block text-secondary" style="font-variation-settings: 'FILL' 1;">nightlight</span>
                                             <p class="font-headline text-[10px] uppercase tracking-widest text-on-surface">Moment of Rest</p>
                                         </div>
+                                    </div>
+                                    <div id="tiredMusicSpectrumWrap"
+                                         class="relative mt-3 hidden w-full overflow-hidden rounded-xl md:mt-4"
+                                         aria-hidden="true">
+                                        <canvas id="tiredMusicSpectrum" class="block h-14 w-full md:h-16" aria-hidden="true"></canvas>
                                     </div>
                                 </div>
                                 <!-- 右侧：情绪中心 -->
@@ -1339,17 +1359,20 @@
                                         <p id="tiredEchoWhisper" class="hidden rounded-xl border border-secondary/20 bg-secondary/10 px-4 py-3 text-left text-sm italic leading-relaxed text-on-surface-variant" role="status"></p>
                                     </div>
                                     <div class="flex flex-col gap-4">
-                                        <button type="button"
-                                                class="group relative flex w-full items-center justify-between overflow-hidden rounded-full bg-gradient-to-r from-primary to-primary-container px-8 py-5 text-white shadow-xl shadow-primary/20 transition-all hover:shadow-primary/40 active:scale-95">
+                                        <button type="button" id="tiredCalmMusicBtn"
+                                                class="group relative flex w-full items-center justify-between overflow-hidden rounded-full bg-gradient-to-r from-primary to-primary-container px-8 py-5 text-white shadow-xl shadow-primary/20 transition-all hover:shadow-primary/40 active:scale-95 touch-manipulation">
                                             <span class="relative z-10 font-bold tracking-wide">静心音乐</span>
                                             <span class="material-symbols-outlined relative z-10 text-2xl transition-transform group-hover:translate-x-1">music_note</span>
                                             <div class="pointer-events-none absolute inset-0 bg-white/10 opacity-0 transition-opacity group-hover:opacity-100"></div>
                                         </button>
-                                        <button type="button"
-                                                class="group flex w-full items-center justify-between rounded-full bg-surface-container-highest px-8 py-5 text-on-surface transition-all hover:bg-surface-container-high active:scale-95">
+                                        <a th:href="@{/meditation}" id="tiredBreathGuideBtn"
+                                           class="group flex w-full items-center justify-between rounded-full bg-surface-container-highest px-8 py-5 text-on-surface transition-all hover:bg-surface-container-high active:scale-95 touch-manipulation no-underline">
                                             <span class="font-semibold tracking-wide">深呼吸引导</span>
                                             <span class="material-symbols-outlined text-2xl text-secondary transition-transform duration-700 group-hover:rotate-180">air</span>
-                                        </button>
+                                        </a>
+                                        <div id="tiredMusicPlayingStatus"
+                                             class="hidden rounded-xl border border-secondary/15 bg-gradient-to-br from-surface-container-low/90 to-secondary-fixed/15 px-4 py-3 text-center text-sm font-medium leading-relaxed text-secondary shadow-sm transition-all"
+                                             role="status" aria-live="polite"></div>
                                     </div>
                                 </div>
                             </div>
@@ -1398,7 +1421,7 @@
                                 </svg>
                                 <div id="happyPoppyHero"
                                      class="absolute inset-0 z-[1] cursor-pointer bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                                     style="background-image: url('/images/cheer-surprise-bg.jpg')"
+                                     style="background-image: url('/images/cheer-surprise-bg.png')"
                                      role="button"
                                      tabindex="0"
                                      aria-label="点击画面：虞美人花瓣与暖金粒子绽放，快乐能量飘向侧栏情绪树洞、滋养小树苗"></div>
@@ -2679,86 +2702,9 @@
         var surpriseCeremonyTimers = [];
         var surpriseCeremonyRaf = null;
         var surpriseSparkInterval = null;
-        var cheerStarryFallTimer = null;
-
-        function ensureCheerStarryBackdrop() {
-            var el = document.getElementById('cheerStarryBackdrop');
-            if (!el) {
-                el = document.createElement('div');
-                el.id = 'cheerStarryBackdrop';
-                el.setAttribute('aria-hidden', 'true');
-                document.body.insertBefore(el, document.body.firstChild);
-            }
-            return el;
-        }
-
-        function ensureCheerStarryParticleLayer() {
-            var el = document.getElementById('cheerStarryParticleLayer');
-            if (!el) {
-                el = document.createElement('div');
-                el.id = 'cheerStarryParticleLayer';
-                el.setAttribute('aria-hidden', 'true');
-                document.body.appendChild(el);
-            }
-            return el;
-        }
-
-        function spawnCheerStarryDrift() {
-            var layer = ensureCheerStarryParticleLayer();
-            var el = document.createElement('span');
-            var isDay = document.body.classList.contains('cheer-starry-day');
-            var isNight = document.body.classList.contains('cheer-starry-night');
-            var r = Math.random();
-            var sub = 'cheer-starry-drift--feather';
-            if (isDay) {
-                if (r < 0.36) {
-                    sub = 'cheer-starry-drift--sun';
-                } else if (r < 0.7) {
-                    sub = 'cheer-starry-drift--star';
-                }
-            } else if (isNight) {
-                if (r < 0.55) {
-                    sub = 'cheer-starry-drift--star-night';
-                } else if (r < 0.78) {
-                    sub = 'cheer-starry-drift--star';
-                }
-            } else {
-                sub = r < 0.52 ? 'cheer-starry-drift--star' : 'cheer-starry-drift--feather';
-            }
-            el.className = 'cheer-starry-drift ' + sub;
-            el.style.left = Math.random() * 100 + '%';
-            el.style.animationDuration = 13 + Math.random() * 18 + 's';
-            el.style.setProperty('--drx', (Math.random() * 180 - 90).toFixed(1) + 'px');
-            el.style.setProperty('--drot', (Math.random() * 140 - 70).toFixed(1) + 'deg');
-            layer.appendChild(el);
-            setTimeout(function () {
-                if (el.parentNode) {
-                    el.parentNode.removeChild(el);
-                }
-            }, 34000);
-        }
-
-        function startCheerStarryAmbience() {
-            ensureCheerStarryBackdrop();
-            document.body.classList.remove('cheer-starry-day', 'cheer-starry-night');
-            document.body.classList.add('cheer-starry-on', getCheerTimePhase() === 'day' ? 'cheer-starry-day' : 'cheer-starry-night');
-            ensureCheerStarryParticleLayer();
-            if (cheerStarryFallTimer) {
-                clearInterval(cheerStarryFallTimer);
-            }
-            var i;
-            for (i = 0; i < 14; i++) {
-                setTimeout(spawnCheerStarryDrift, i * 200);
-            }
-            cheerStarryFallTimer = setInterval(spawnCheerStarryDrift, 480);
-        }
 
         function stopCheerStarryAmbience() {
             document.body.classList.remove('cheer-starry-on', 'cheer-starry-day', 'cheer-starry-night', 'cheer-starry-mega');
-            if (cheerStarryFallTimer) {
-                clearInterval(cheerStarryFallTimer);
-                cheerStarryFallTimer = null;
-            }
             var layer = document.getElementById('cheerStarryParticleLayer');
             if (layer) {
                 layer.innerHTML = '';
@@ -3365,7 +3311,6 @@
                 return;
             }
             surpriseCeremonyBusy = true;
-            startCheerStarryAmbience();
             clearPeaceDoves();
             var slot = document.getElementById('surpriseStickySlot');
             if (slot) {
@@ -4483,11 +4428,17 @@
                 });
             }
 
-            window.addEventListener('resize', function () {
+            function tiredHeroResize() {
                 if (tiredPhase === 1) {
                     syncPileHitHeight();
                 }
-            });
+            }
+            window.addEventListener('resize', tiredHeroResize);
+            if (typeof window.__hollowRegisterTurboCleanup === 'function') {
+                window.__hollowRegisterTurboCleanup(function () {
+                    window.removeEventListener('resize', tiredHeroResize);
+                });
+            }
         })();
 
         var surpriseGiftBtn = document.getElementById('surpriseGiftBtn');
@@ -4565,5 +4516,6 @@
         refreshHugToday();
     })();
 </script>
+<script defer th:src="@{/js/cheer-tired-calm-music.js}"></script>
 </body>
 </html>

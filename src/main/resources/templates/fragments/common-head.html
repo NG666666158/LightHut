@@ -2,8 +2,11 @@
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
 <body>
 <th:block th:fragment="coreDeps()">
+    <meta name="theme-color" content="#fffcf7"/>
+    <link rel="icon" type="image/png" sizes="512x512" href="/favicon.png"/>
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon.png"/>
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png"/>
-    <link rel="apple-touch-icon" href="/favicon.png"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png"/>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;family=Be+Vietnam+Pro:wght@300;400;500;600&amp;display=swap"
           rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
@@ -78,13 +81,8 @@
         }
     </script>
     <style>
-        html {
-            overflow-x: hidden;
-            -webkit-text-size-adjust: 100%;
-            text-size-adjust: 100%;
-        }
         img, video { max-width: 100%; height: auto; }
-        /* 手机端：减少误触高亮、侧栏横向滚动隐藏滚动条 */
+        /* 手机端：侧栏横向导航惯性滑动、隐藏滚动条 */
         .mobile-nav-scroll {
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
@@ -92,6 +90,11 @@
         }
         .mobile-nav-scroll::-webkit-scrollbar { display: none; }
     </style>
+    <link rel="stylesheet" href="/css/hollow-page-shell.css"/>
+    <link rel="stylesheet" href="/css/home-sidebar-music.css"/>
+    <script defer src="/js/home-sidebar-music.js"></script>
+    <script defer src="/js/hollow-turbo-boot.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@hotwired/turbo@8.0.5/dist/turbo.es2017-umd.js"></script>
     <script src="/js/hollow-nav-trail.js"></script>
     <script defer src="/js/image-fallback.js"></script>
     <script defer src="/js/future-letter-gate.js"></script>

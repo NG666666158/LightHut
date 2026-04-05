@@ -27,7 +27,13 @@ public class JpaMemoryRepository implements MemoryRepository {
     @Override
     @Transactional
     public void save(MemoryRecord record) {
-        MemoryEntity e = new MemoryEntity();
+        MemoryEntity e;
+        if (record.getId() != null) {
+            e = dao.findById(record.getId())
+                    .orElseThrow(() -> new IllegalArgumentException("回忆不存在: " + record.getId()));
+        } else {
+            e = new MemoryEntity();
+        }
         e.setTitle(record.getTitle());
         e.setDescription(record.getDescription());
         e.setImageUrl(record.getImageUrl());

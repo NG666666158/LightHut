@@ -1,8 +1,10 @@
 package com.friend.hollow.controller.api;
 
+import com.friend.hollow.dto.EncouragementFeedResponse;
 import com.friend.hollow.dto.HomeOverviewResponse;
 import com.friend.hollow.dto.SignInActionResponse;
 import com.friend.hollow.dto.SignInStatusResponse;
+import com.friend.hollow.service.EncouragementFeedService;
 import com.friend.hollow.service.HomeOverviewService;
 import com.friend.hollow.service.SignInService;
 import com.friend.hollow.util.PagePathUtil;
@@ -24,10 +26,16 @@ public class HomeOverviewApiController {
 
     private final HomeOverviewService homeOverviewService;
     private final SignInService signInService;
+    private final EncouragementFeedService encouragementFeedService;
 
-    public HomeOverviewApiController(HomeOverviewService homeOverviewService, SignInService signInService) {
+    public HomeOverviewApiController(
+            HomeOverviewService homeOverviewService,
+            SignInService signInService,
+            EncouragementFeedService encouragementFeedService
+    ) {
         this.homeOverviewService = homeOverviewService;
         this.signInService = signInService;
+        this.encouragementFeedService = encouragementFeedService;
     }
 
     /**
@@ -39,6 +47,14 @@ public class HomeOverviewApiController {
     public HomeOverviewResponse homeOverview(HttpSession session) {
         long sessionStartMs = session != null ? session.getCreationTime() : System.currentTimeMillis();
         return homeOverviewService.getOverview(sessionStartMs);
+    }
+
+    /**
+     * 挚友鼓励多条文案（供首页滚动区）；可选从 {@code app.home.encouragement-external-url} 拉取 JSON 数组合并。
+     */
+    @GetMapping(PagePathUtil.HOME_ENCOURAGEMENT_FEED_API)
+    public EncouragementFeedResponse encouragementFeed() {
+        return encouragementFeedService.getFeed();
     }
 
     /**

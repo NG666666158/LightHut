@@ -15,6 +15,14 @@ public class InMemoryMemoryRepository implements MemoryRepository {
 
     @Override
     public synchronized void save(MemoryRecord record) {
+        if (record.getId() != null) {
+            for (int i = 0; i < store.size(); i++) {
+                if (record.getId().equals(store.get(i).getId())) {
+                    store.set(i, record);
+                    return;
+                }
+            }
+        }
         if (record.getId() == null) {
             record.setId(nextId.getAndIncrement());
         }

@@ -81,6 +81,21 @@ public final class PagePathUtil {
     public static final String EXPLORE_PAGE_ROUTE = "/explore";
 
     /**
+     * 冥想页：项目根目录 {@code mp3} 文件夹内白噪音列表（扫描 .mp3）。
+     */
+    public static final String MEDITATION_NOISE_TRACKS_API = "/api/meditation/noise-tracks";
+
+    /**
+     * 侧栏轻音乐：项目根目录 {@code musics} 文件夹内曲目列表（扫描 .mp3）。
+     */
+    public static final String HOME_MUSIC_TRACKS_API = "/api/home/music-tracks";
+
+    /**
+     * 探索页「互助社区」文案列表（内置 + 可选外部 JSON，服务端拉取）。
+     */
+    public static final String EXPLORE_COMMUNITY_FEED_API = "/api/explore/community-feed";
+
+    /**
      * 主页数据接口路径（前端可通过 fetch 调用）。
      *
      * <p>可修改点：
@@ -105,6 +120,11 @@ public final class PagePathUtil {
      * 最近心情列表。
      */
     public static final String HOME_MOOD_RECENT_API = "/api/home/mood/recent";
+
+    /**
+     * 首页「挚友的鼓励」滚动列表（聚合配置、内置与可选外部 JSON）。
+     */
+    public static final String HOME_ENCOURAGEMENT_FEED_API = "/api/home/encouragement-feed";
 
     /**
      * 星光墙：回忆列表（支持分类、排序、分页）。

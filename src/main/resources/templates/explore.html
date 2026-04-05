@@ -6,20 +6,6 @@
     <title>探索 - 挚友专属・治愈树洞备忘录</title>
     <th:block th:replace="~{fragments/common-head :: coreDeps()}"></th:block>
     <style>
-        body {
-            margin: 0;
-            min-height: 100vh;
-            min-height: 100dvh;
-            width: 100%;
-            max-width: 100vw;
-            overflow-x: hidden;
-            overflow-y: auto;
-            font-family: 'Be Vietnam Pro', sans-serif;
-            background-color: #fffcf7;
-            color: #373831;
-        }
-        .font-headline { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
         .explore-hide-scrollbar::-webkit-scrollbar { display: none; }
         .explore-hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         @media (hover: none) and (pointer: coarse) {
@@ -115,6 +101,21 @@
         @media (min-width: 1024px) {
             .explore-marquee-item-wall { flex: 0 0 13.25rem; }
         }
+        /* 疗愈壁纸用 <img>：GIF/WebP 动图在独立层渲染，避免 CSS background-image 在部分环境下动效异常 */
+        .explore-wallpaper-media {
+            object-fit: contain;
+            object-position: center;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            transform: translateZ(0);
+        }
+        .explore-wallpaper-media--gif {
+            image-rendering: auto;
+        }
+        .explore-marquee-item-wall.group:hover .explore-wallpaper-media--gif,
+        .explore-marquee-item-wall.group:focus-within .explore-wallpaper-media--gif {
+            will-change: transform;
+        }
         @media (prefers-reduced-motion: reduce) {
             .explore-marquee-track--community,
             .explore-marquee-track--wall {
@@ -136,7 +137,7 @@
 <body class="flex min-h-screen w-full max-w-full flex-col overflow-x-hidden bg-background font-body text-on-surface selection:bg-primary-fixed selection:text-on-primary-container lg:flex-row">
 <nav th:replace="~{fragments/layout :: sidebar('explore')}"></nav>
 
-<main class="relative flex min-h-screen min-w-0 w-full flex-1 flex-col overflow-y-auto bg-surface lg:ml-72">
+<main class="relative flex min-h-screen min-w-0 w-full flex-1 flex-col overflow-y-auto bg-surface hollow-main-scroll lg:ml-72">
     <header th:replace="~{fragments/layout :: topbar(activeTopNav='explore')}"></header>
 
     <!-- 探索页：首图与社区/壁纸同宽；社区与壁纸横向无缝循环滚动 -->
@@ -149,7 +150,7 @@
                 <div class="explore-inline-pad">
                     <div class="explore-hero-banner relative flex w-full items-stretch overflow-hidden shadow-[0_8px_32px_rgba(55,56,49,0.08)] sm:rounded-2xl">
                         <div class="pointer-events-none absolute inset-0 bg-cover bg-center"
-                             style="background-image: url('/images/explore-hero.jpg');"></div>
+                             style="background-image: url('/images/explore-hero.png');"></div>
                         <div class="explore-hero-mist pointer-events-none absolute inset-0 z-[1]" aria-hidden="true"></div>
                         <div class="relative z-[2] flex w-full flex-col justify-center py-10 pl-6 pr-4 sm:w-[55%] sm:py-12 sm:pl-10 sm:pr-8 lg:w-[48%] lg:pl-14 lg:pr-12">
                             <h3 class="mb-3 font-headline text-2xl font-bold text-on-surface sm:text-3xl lg:text-4xl">晨光洗涤 <span class="text-on-surface-variant text-lg font-medium sm:text-xl">Morning Light</span></h3>
@@ -180,62 +181,7 @@
                 <div id="exploreCommunityViewport" class="explore-marquee-viewport explore-hide-scrollbar" data-explore-marquee="" role="region" aria-label="互助社区滚动展示">
                     <div class="explore-marquee-track explore-marquee-track--community gap-5 lg:gap-6">
                         <div class="explore-marquee-chunk explore-community-chunk gap-5 lg:gap-6">
-                            <article data-explore-post-id="c-seed-1" class="explore-marquee-item-community flex min-h-[220px] flex-col gap-4 rounded-xl border border-outline-variant/10 bg-surface-container-lowest p-5 shadow-[0_2px_16px_rgba(55,56,49,0.04)] sm:min-h-0 sm:p-6">
-                                <p class="flex-1 text-base italic leading-relaxed text-on-surface sm:text-lg">「慢慢来，允许自己有低落的日子。我们在云端拥抱你。」</p>
-                                <div class="mt-auto flex items-center gap-3 border-t border-surface-variant pt-4">
-                                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary-container text-sm font-bold text-on-secondary-container">A</div>
-                                    <div class="min-w-0 flex flex-col">
-                                        <span class="text-sm font-semibold text-on-surface">匿名飞鸟</span>
-                                        <span class="text-xs text-on-surface-variant">2 小时前</span>
-                                    </div>
-                                    <button type="button" class="explore-like ml-auto inline-flex items-center gap-1 text-on-surface-variant transition-colors hover:text-primary" aria-label="点赞" aria-pressed="false">
-                                        <span class="material-symbols-outlined text-lg">favorite</span>
-                                        <span class="explore-like-count text-xs font-semibold tabular-nums">0</span>
-                                    </button>
-                                </div>
-                            </article>
-                            <article data-explore-post-id="c-seed-2" class="explore-marquee-item-community flex min-h-[220px] flex-col gap-4 rounded-xl border border-outline-variant/10 bg-surface-container-lowest p-5 shadow-[0_2px_16px_rgba(55,56,49,0.04)] sm:min-h-0 sm:p-6">
-                                <p class="flex-1 text-base italic leading-relaxed text-on-surface sm:text-lg">「今天的焦虑好像少了一点点，虽然只有一点点，但也值得庆祝。」</p>
-                                <div class="mt-auto flex items-center gap-3 border-t border-surface-variant pt-4">
-                                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-tertiary-container text-sm font-bold text-on-tertiary-container">M</div>
-                                    <div class="min-w-0 flex flex-col">
-                                        <span class="text-sm font-semibold text-on-surface">寻找微光</span>
-                                        <span class="text-xs text-on-surface-variant">5 小时前</span>
-                                    </div>
-                                    <button type="button" class="explore-like ml-auto inline-flex items-center gap-1 text-on-surface-variant transition-colors hover:text-primary" aria-label="点赞" aria-pressed="false">
-                                        <span class="material-symbols-outlined text-lg">favorite</span>
-                                        <span class="explore-like-count text-xs font-semibold tabular-nums">0</span>
-                                    </button>
-                                </div>
-                            </article>
-                            <article data-explore-post-id="c-seed-3" class="explore-marquee-item-community flex min-h-[220px] flex-col gap-4 rounded-xl border border-outline-variant/10 bg-surface-container-lowest p-5 shadow-[0_2px_16px_rgba(55,56,49,0.04)] sm:min-h-0 sm:p-6">
-                                <p class="flex-1 text-base italic leading-relaxed text-on-surface sm:text-lg">「看到大家的留言，觉得不是一个人在战斗。谢谢你们的存在。」</p>
-                                <div class="mt-auto flex items-center gap-3 border-t border-surface-variant pt-4">
-                                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-container/50 text-sm font-bold text-on-primary-container">S</div>
-                                    <div class="min-w-0 flex flex-col">
-                                        <span class="text-sm font-semibold text-on-surface">星空守望</span>
-                                        <span class="text-xs text-on-surface-variant">昨天</span>
-                                    </div>
-                                    <button type="button" class="explore-like ml-auto inline-flex items-center gap-1 text-on-surface-variant transition-colors hover:text-primary" aria-label="点赞" aria-pressed="false">
-                                        <span class="material-symbols-outlined text-lg">favorite</span>
-                                        <span class="explore-like-count text-xs font-semibold tabular-nums">0</span>
-                                    </button>
-                                </div>
-                            </article>
-                            <article data-explore-post-id="c-seed-4" class="explore-marquee-item-community flex min-h-[220px] flex-col gap-4 rounded-xl border border-outline-variant/10 bg-surface-container-lowest p-5 shadow-[0_2px_16px_rgba(55,56,49,0.04)] sm:min-h-0 sm:p-6">
-                                <p class="flex-1 text-base italic leading-relaxed text-on-surface sm:text-lg">「把心事折成纸飞机吧，风会带走一点重量，留下轻盈的你。」</p>
-                                <div class="mt-auto flex items-center gap-3 border-t border-surface-variant pt-4">
-                                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary-fixed text-sm font-bold text-secondary">L</div>
-                                    <div class="min-w-0 flex flex-col">
-                                        <span class="text-sm font-semibold text-on-surface">晚风信笺</span>
-                                        <span class="text-xs text-on-surface-variant">3 天前</span>
-                                    </div>
-                                    <button type="button" class="explore-like ml-auto inline-flex items-center gap-1 text-on-surface-variant transition-colors hover:text-primary" aria-label="点赞" aria-pressed="false">
-                                        <span class="material-symbols-outlined text-lg">favorite</span>
-                                        <span class="explore-like-count text-xs font-semibold tabular-nums">0</span>
-                                    </button>
-                                </div>
-                            </article>
+                            <p class="explore-community-loading shrink-0 px-3 py-8 text-sm text-on-surface-variant">互助留言加载中…</p>
                         </div>
                     </div>
                 </div>
@@ -261,48 +207,204 @@
                 <div class="explore-marquee-viewport explore-hide-scrollbar" data-explore-marquee="" role="region" aria-label="疗愈壁纸滚动展示">
                     <div class="explore-marquee-track explore-marquee-track--wall gap-4 sm:gap-5 lg:gap-6">
                         <div class="explore-marquee-chunk gap-4 sm:gap-5 lg:gap-6">
-                            <div class="explore-marquee-item-wall group relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-surface-container">
-                                <div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                                     style="background-image: url('/images/explore-card-1.jpg');"></div>
-                                <div class="explore-wallpaper-cta absolute inset-0 flex items-end bg-gradient-to-t from-inverse-surface/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 sm:p-4">
+                            <div class="explore-marquee-item-wall group relative isolate flex h-[14rem] w-full shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-container sm:h-[16rem] lg:h-[18rem]">
+                                <img class="explore-wallpaper-media relative z-0 max-h-full max-w-full object-contain pointer-events-none transition-transform duration-700 group-hover:scale-[1.04]"
+                                     src="/images/explore-wallpaper/wallpaper-01.jpg" alt="" loading="lazy" decoding="async" draggable="false" />
+                                <div class="explore-wallpaper-cta absolute inset-0 z-[1] flex items-end bg-gradient-to-t from-inverse-surface/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 sm:p-4">
                                     <a class="flex w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest/90 py-2.5 text-base font-semibold text-on-surface backdrop-blur-sm transition-colors hover:bg-primary-container hover:text-on-primary-container sm:py-3"
-                                       href="/images/explore-card-1.jpg"
+                                       href="/images/explore-wallpaper/wallpaper-01.jpg"
                                        target="_blank" rel="noopener noreferrer" download>
                                         <span class="material-symbols-outlined text-lg">download</span>
                                         下载
                                     </a>
                                 </div>
                             </div>
-                            <div class="explore-marquee-item-wall group relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-surface-container">
-                                <div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                                     style="background-image: url('/images/explore-card-2.jpg');"></div>
-                                <div class="explore-wallpaper-cta absolute inset-0 flex items-end bg-gradient-to-t from-inverse-surface/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 sm:p-4">
+                            <div class="explore-marquee-item-wall group relative isolate flex h-[14rem] w-full shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-container sm:h-[16rem] lg:h-[18rem]">
+                                <img class="explore-wallpaper-media relative z-0 max-h-full max-w-full object-contain pointer-events-none transition-transform duration-700 group-hover:scale-[1.04]"
+                                     src="/images/explore-wallpaper/wallpaper-02.jpg" alt="" loading="lazy" decoding="async" draggable="false" />
+                                <div class="explore-wallpaper-cta absolute inset-0 z-[1] flex items-end bg-gradient-to-t from-inverse-surface/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 sm:p-4">
                                     <a class="flex w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest/90 py-2.5 text-base font-semibold text-on-surface backdrop-blur-sm transition-colors hover:bg-primary-container hover:text-on-primary-container sm:py-3"
-                                       href="/images/explore-card-2.jpg"
+                                       href="/images/explore-wallpaper/wallpaper-02.jpg"
                                        target="_blank" rel="noopener noreferrer" download>
                                         <span class="material-symbols-outlined text-lg">download</span>
                                         下载
                                     </a>
                                 </div>
                             </div>
-                            <div class="explore-marquee-item-wall group relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-surface-container">
-                                <div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                                     style="background-image: url('/images/explore-card-3.jpg');"></div>
-                                <div class="explore-wallpaper-cta absolute inset-0 flex items-end bg-gradient-to-t from-inverse-surface/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 sm:p-4">
+                            <div class="explore-marquee-item-wall group relative isolate flex h-[14rem] w-full shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-container sm:h-[16rem] lg:h-[18rem]">
+                                <img class="explore-wallpaper-media relative z-0 max-h-full max-w-full object-contain pointer-events-none transition-transform duration-700 group-hover:scale-[1.04]"
+                                     src="/images/explore-wallpaper/wallpaper-03.jpg" alt="" loading="lazy" decoding="async" draggable="false" />
+                                <div class="explore-wallpaper-cta absolute inset-0 z-[1] flex items-end bg-gradient-to-t from-inverse-surface/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 sm:p-4">
                                     <a class="flex w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest/90 py-2.5 text-base font-semibold text-on-surface backdrop-blur-sm transition-colors hover:bg-primary-container hover:text-on-primary-container sm:py-3"
-                                       href="/images/explore-card-3.jpg"
+                                       href="/images/explore-wallpaper/wallpaper-03.jpg"
                                        target="_blank" rel="noopener noreferrer" download>
                                         <span class="material-symbols-outlined text-lg">download</span>
                                         下载
                                     </a>
                                 </div>
                             </div>
-                            <div class="explore-marquee-item-wall group relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-surface-container">
-                                <div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                                     style="background-image: url('/images/daily-meditation.jpg');"></div>
-                                <div class="explore-wallpaper-cta absolute inset-0 flex items-end bg-gradient-to-t from-inverse-surface/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 sm:p-4">
+                            <div class="explore-marquee-item-wall group relative isolate flex h-[14rem] w-full shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-container sm:h-[16rem] lg:h-[18rem]">
+                                <img class="explore-wallpaper-media relative z-0 max-h-full max-w-full object-contain pointer-events-none transition-transform duration-700 group-hover:scale-[1.04]"
+                                     src="/images/explore-wallpaper/wallpaper-04.jpg" alt="" loading="lazy" decoding="async" draggable="false" />
+                                <div class="explore-wallpaper-cta absolute inset-0 z-[1] flex items-end bg-gradient-to-t from-inverse-surface/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 sm:p-4">
                                     <a class="flex w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest/90 py-2.5 text-base font-semibold text-on-surface backdrop-blur-sm transition-colors hover:bg-primary-container hover:text-on-primary-container sm:py-3"
-                                       href="/images/daily-meditation.jpg"
+                                       href="/images/explore-wallpaper/wallpaper-04.jpg"
+                                       target="_blank" rel="noopener noreferrer" download>
+                                        <span class="material-symbols-outlined text-lg">download</span>
+                                        下载
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="explore-marquee-item-wall group relative isolate flex h-[14rem] w-full shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-container sm:h-[16rem] lg:h-[18rem]">
+                                <img class="explore-wallpaper-media relative z-0 max-h-full max-w-full object-contain pointer-events-none transition-transform duration-700 group-hover:scale-[1.04]"
+                                     src="/images/explore-wallpaper/wallpaper-05.jpg" alt="" loading="lazy" decoding="async" draggable="false" />
+                                <div class="explore-wallpaper-cta absolute inset-0 z-[1] flex items-end bg-gradient-to-t from-inverse-surface/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 sm:p-4">
+                                    <a class="flex w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest/90 py-2.5 text-base font-semibold text-on-surface backdrop-blur-sm transition-colors hover:bg-primary-container hover:text-on-primary-container sm:py-3"
+                                       href="/images/explore-wallpaper/wallpaper-05.jpg"
+                                       target="_blank" rel="noopener noreferrer" download>
+                                        <span class="material-symbols-outlined text-lg">download</span>
+                                        下载
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="explore-marquee-item-wall group relative isolate flex h-[14rem] w-full shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-container sm:h-[16rem] lg:h-[18rem]">
+                                <img class="explore-wallpaper-media relative z-0 max-h-full max-w-full object-contain pointer-events-none transition-transform duration-700 group-hover:scale-[1.04]"
+                                     src="/images/explore-wallpaper/wallpaper-06.jpg" alt="" loading="lazy" decoding="async" draggable="false" />
+                                <div class="explore-wallpaper-cta absolute inset-0 z-[1] flex items-end bg-gradient-to-t from-inverse-surface/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 sm:p-4">
+                                    <a class="flex w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest/90 py-2.5 text-base font-semibold text-on-surface backdrop-blur-sm transition-colors hover:bg-primary-container hover:text-on-primary-container sm:py-3"
+                                       href="/images/explore-wallpaper/wallpaper-06.jpg"
+                                       target="_blank" rel="noopener noreferrer" download>
+                                        <span class="material-symbols-outlined text-lg">download</span>
+                                        下载
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="explore-marquee-item-wall group relative isolate flex h-[14rem] w-full shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-container sm:h-[16rem] lg:h-[18rem]">
+                                <img class="explore-wallpaper-media relative z-0 max-h-full max-w-full object-contain pointer-events-none transition-transform duration-700 group-hover:scale-[1.04]"
+                                     src="/images/explore-wallpaper/wallpaper-07.jpg" alt="" loading="lazy" decoding="async" draggable="false" />
+                                <div class="explore-wallpaper-cta absolute inset-0 z-[1] flex items-end bg-gradient-to-t from-inverse-surface/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 sm:p-4">
+                                    <a class="flex w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest/90 py-2.5 text-base font-semibold text-on-surface backdrop-blur-sm transition-colors hover:bg-primary-container hover:text-on-primary-container sm:py-3"
+                                       href="/images/explore-wallpaper/wallpaper-07.jpg"
+                                       target="_blank" rel="noopener noreferrer" download>
+                                        <span class="material-symbols-outlined text-lg">download</span>
+                                        下载
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="explore-marquee-item-wall group relative isolate flex h-[14rem] w-full shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-container sm:h-[16rem] lg:h-[18rem]">
+                                <img class="explore-wallpaper-media relative z-0 max-h-full max-w-full object-contain pointer-events-none transition-transform duration-700 group-hover:scale-[1.04]"
+                                     src="/images/explore-wallpaper/wallpaper-08.jpg" alt="" loading="lazy" decoding="async" draggable="false" />
+                                <div class="explore-wallpaper-cta absolute inset-0 z-[1] flex items-end bg-gradient-to-t from-inverse-surface/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 sm:p-4">
+                                    <a class="flex w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest/90 py-2.5 text-base font-semibold text-on-surface backdrop-blur-sm transition-colors hover:bg-primary-container hover:text-on-primary-container sm:py-3"
+                                       href="/images/explore-wallpaper/wallpaper-08.jpg"
+                                       target="_blank" rel="noopener noreferrer" download>
+                                        <span class="material-symbols-outlined text-lg">download</span>
+                                        下载
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="explore-marquee-item-wall group relative isolate flex h-[14rem] w-full shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-container sm:h-[16rem] lg:h-[18rem]">
+                                <img class="explore-wallpaper-media relative z-0 max-h-full max-w-full object-contain pointer-events-none transition-transform duration-700 group-hover:scale-[1.04]"
+                                     src="/images/explore-wallpaper/wallpaper-09.jpg" alt="" loading="lazy" decoding="async" draggable="false" />
+                                <div class="explore-wallpaper-cta absolute inset-0 z-[1] flex items-end bg-gradient-to-t from-inverse-surface/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 sm:p-4">
+                                    <a class="flex w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest/90 py-2.5 text-base font-semibold text-on-surface backdrop-blur-sm transition-colors hover:bg-primary-container hover:text-on-primary-container sm:py-3"
+                                       href="/images/explore-wallpaper/wallpaper-09.jpg"
+                                       target="_blank" rel="noopener noreferrer" download>
+                                        <span class="material-symbols-outlined text-lg">download</span>
+                                        下载
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="explore-marquee-item-wall group relative isolate flex h-[14rem] w-full shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-container sm:h-[16rem] lg:h-[18rem]">
+                                <img class="explore-wallpaper-media relative z-0 max-h-full max-w-full object-contain pointer-events-none transition-transform duration-700 group-hover:scale-[1.04]"
+                                     src="/images/explore-wallpaper/wallpaper-10.jpg" alt="" loading="lazy" decoding="async" draggable="false" />
+                                <div class="explore-wallpaper-cta absolute inset-0 z-[1] flex items-end bg-gradient-to-t from-inverse-surface/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 sm:p-4">
+                                    <a class="flex w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest/90 py-2.5 text-base font-semibold text-on-surface backdrop-blur-sm transition-colors hover:bg-primary-container hover:text-on-primary-container sm:py-3"
+                                       href="/images/explore-wallpaper/wallpaper-10.jpg"
+                                       target="_blank" rel="noopener noreferrer" download>
+                                        <span class="material-symbols-outlined text-lg">download</span>
+                                        下载
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="explore-marquee-item-wall group relative isolate flex h-[14rem] w-full shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-container sm:h-[16rem] lg:h-[18rem]">
+                                <img class="explore-wallpaper-media relative z-0 max-h-full max-w-full object-contain pointer-events-none transition-transform duration-700 group-hover:scale-[1.04]"
+                                     src="/images/explore-wallpaper/wallpaper-11.jpg" alt="" loading="lazy" decoding="async" draggable="false" />
+                                <div class="explore-wallpaper-cta absolute inset-0 z-[1] flex items-end bg-gradient-to-t from-inverse-surface/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 sm:p-4">
+                                    <a class="flex w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest/90 py-2.5 text-base font-semibold text-on-surface backdrop-blur-sm transition-colors hover:bg-primary-container hover:text-on-primary-container sm:py-3"
+                                       href="/images/explore-wallpaper/wallpaper-11.jpg"
+                                       target="_blank" rel="noopener noreferrer" download>
+                                        <span class="material-symbols-outlined text-lg">download</span>
+                                        下载
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="explore-marquee-item-wall group relative isolate flex h-[14rem] w-full shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-container sm:h-[16rem] lg:h-[18rem]">
+                                <img class="explore-wallpaper-media relative z-0 max-h-full max-w-full object-contain pointer-events-none transition-transform duration-700 group-hover:scale-[1.04]"
+                                     src="/images/explore-wallpaper/wallpaper-12.jpg" alt="" loading="lazy" decoding="async" draggable="false" />
+                                <div class="explore-wallpaper-cta absolute inset-0 z-[1] flex items-end bg-gradient-to-t from-inverse-surface/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 sm:p-4">
+                                    <a class="flex w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest/90 py-2.5 text-base font-semibold text-on-surface backdrop-blur-sm transition-colors hover:bg-primary-container hover:text-on-primary-container sm:py-3"
+                                       href="/images/explore-wallpaper/wallpaper-12.jpg"
+                                       target="_blank" rel="noopener noreferrer" download>
+                                        <span class="material-symbols-outlined text-lg">download</span>
+                                        下载
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="explore-marquee-item-wall group relative isolate flex h-[14rem] w-full shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-container sm:h-[16rem] lg:h-[18rem]">
+                                <img class="explore-wallpaper-media relative z-0 max-h-full max-w-full object-contain pointer-events-none transition-transform duration-700 group-hover:scale-[1.04]"
+                                     src="/images/explore-wallpaper/wallpaper-13.jpg" alt="" loading="lazy" decoding="async" draggable="false" />
+                                <div class="explore-wallpaper-cta absolute inset-0 z-[1] flex items-end bg-gradient-to-t from-inverse-surface/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 sm:p-4">
+                                    <a class="flex w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest/90 py-2.5 text-base font-semibold text-on-surface backdrop-blur-sm transition-colors hover:bg-primary-container hover:text-on-primary-container sm:py-3"
+                                       href="/images/explore-wallpaper/wallpaper-13.jpg"
+                                       target="_blank" rel="noopener noreferrer" download>
+                                        <span class="material-symbols-outlined text-lg">download</span>
+                                        下载
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="explore-marquee-item-wall group relative isolate flex h-[14rem] w-full shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-container sm:h-[16rem] lg:h-[18rem]">
+                                <img class="explore-wallpaper-media relative z-0 max-h-full max-w-full object-contain pointer-events-none transition-transform duration-700 group-hover:scale-[1.04]"
+                                     src="/images/explore-wallpaper/wallpaper-14.jpg" alt="" loading="lazy" decoding="async" draggable="false" />
+                                <div class="explore-wallpaper-cta absolute inset-0 z-[1] flex items-end bg-gradient-to-t from-inverse-surface/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 sm:p-4">
+                                    <a class="flex w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest/90 py-2.5 text-base font-semibold text-on-surface backdrop-blur-sm transition-colors hover:bg-primary-container hover:text-on-primary-container sm:py-3"
+                                       href="/images/explore-wallpaper/wallpaper-14.jpg"
+                                       target="_blank" rel="noopener noreferrer" download>
+                                        <span class="material-symbols-outlined text-lg">download</span>
+                                        下载
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="explore-marquee-item-wall group relative isolate flex h-[14rem] w-full shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-container sm:h-[16rem] lg:h-[18rem]">
+                                <img class="explore-wallpaper-media relative z-0 max-h-full max-w-full object-contain pointer-events-none transition-transform duration-700 group-hover:scale-[1.04]"
+                                     src="/images/explore-wallpaper/wallpaper-15.jpg" alt="" loading="lazy" decoding="async" draggable="false" />
+                                <div class="explore-wallpaper-cta absolute inset-0 z-[1] flex items-end bg-gradient-to-t from-inverse-surface/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 sm:p-4">
+                                    <a class="flex w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest/90 py-2.5 text-base font-semibold text-on-surface backdrop-blur-sm transition-colors hover:bg-primary-container hover:text-on-primary-container sm:py-3"
+                                       href="/images/explore-wallpaper/wallpaper-15.jpg"
+                                       target="_blank" rel="noopener noreferrer" download>
+                                        <span class="material-symbols-outlined text-lg">download</span>
+                                        下载
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="explore-marquee-item-wall group relative isolate flex h-[14rem] w-full shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-container sm:h-[16rem] lg:h-[18rem]">
+                                <img class="explore-wallpaper-media relative z-0 max-h-full max-w-full object-contain pointer-events-none transition-transform duration-700 group-hover:scale-[1.04]"
+                                     src="/images/explore-wallpaper/wallpaper-16.jpg" alt="" loading="lazy" decoding="async" draggable="false" />
+                                <div class="explore-wallpaper-cta absolute inset-0 z-[1] flex items-end bg-gradient-to-t from-inverse-surface/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 sm:p-4">
+                                    <a class="flex w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest/90 py-2.5 text-base font-semibold text-on-surface backdrop-blur-sm transition-colors hover:bg-primary-container hover:text-on-primary-container sm:py-3"
+                                       href="/images/explore-wallpaper/wallpaper-16.jpg"
+                                       target="_blank" rel="noopener noreferrer" download>
+                                        <span class="material-symbols-outlined text-lg">download</span>
+                                        下载
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="explore-marquee-item-wall group relative isolate flex h-[14rem] w-full shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-container sm:h-[16rem] lg:h-[18rem]">
+                                <img class="explore-wallpaper-media relative z-0 max-h-full max-w-full object-contain pointer-events-none transition-transform duration-700 group-hover:scale-[1.04]"
+                                     src="/images/explore-wallpaper/wallpaper-17.jpg" alt="" loading="lazy" decoding="async" draggable="false" />
+                                <div class="explore-wallpaper-cta absolute inset-0 z-[1] flex items-end bg-gradient-to-t from-inverse-surface/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 sm:p-4">
+                                    <a class="flex w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest/90 py-2.5 text-base font-semibold text-on-surface backdrop-blur-sm transition-colors hover:bg-primary-container hover:text-on-primary-container sm:py-3"
+                                       href="/images/explore-wallpaper/wallpaper-17.jpg"
                                        target="_blank" rel="noopener noreferrer" download>
                                         <span class="material-symbols-outlined text-lg">download</span>
                                         下载
@@ -321,6 +423,16 @@
 <script th:src="@{/js/hollow-explore-bonds.js}"></script>
 <script>
     (function () {
+        function escapeHtmlEx(s) {
+            if (s == null) {
+                return '';
+            }
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
         function getHeroInspirationPlain() {
             var el = document.getElementById('exploreHeroInspirationLine');
             if (!el) {
@@ -433,22 +545,157 @@
                         hint.classList.add('hidden');
                     }, 5500);
                 }
+                renderExploreCommunityCards();
+                var cv = document.getElementById('exploreCommunityViewport');
+                if (cv) {
+                    var tr = cv.querySelector('.explore-marquee-track');
+                    while (tr && tr.querySelectorAll('.explore-marquee-chunk').length > 1) {
+                        tr.removeChild(tr.lastElementChild);
+                    }
+                    cloneSingleMarqueeViewport(cv);
+                }
+                scheduleMarqueeSteps();
                 syncCommunityLikeCounts();
             });
         }
+        function shuffleArrayInPlace(arr) {
+            var i;
+            var j;
+            var t;
+            for (i = arr.length - 1; i > 0; i--) {
+                j = Math.floor(Math.random() * (i + 1));
+                t = arr[i];
+                arr[i] = arr[j];
+                arr[j] = t;
+            }
+            return arr;
+        }
+        function shuffleExploreWallpaperChunk() {
+            var track = document.querySelector('.explore-marquee-track--wall');
+            if (!track) {
+                return;
+            }
+            var chunk = track.querySelector('.explore-marquee-chunk');
+            if (!chunk) {
+                return;
+            }
+            var nodes = Array.prototype.slice.call(chunk.querySelectorAll('.explore-marquee-item-wall'));
+            if (nodes.length < 2) {
+                return;
+            }
+            shuffleArrayInPlace(nodes);
+            nodes.forEach(function (el) {
+                chunk.appendChild(el);
+            });
+        }
+        function cloneSingleMarqueeViewport(vp) {
+            if (!vp) {
+                return;
+            }
+            var track = vp.querySelector('.explore-marquee-track');
+            if (!track) {
+                return;
+            }
+            var chunks = track.querySelectorAll('.explore-marquee-chunk');
+            if (chunks.length !== 1) {
+                return;
+            }
+            var copy = chunks[0].cloneNode(true);
+            copy.setAttribute('aria-hidden', 'true');
+            track.appendChild(copy);
+        }
         function cloneExploreMarquees() {
             document.querySelectorAll('[data-explore-marquee]').forEach(function (vp) {
-                var track = vp.querySelector('.explore-marquee-track');
-                if (!track) {
-                    return;
+                cloneSingleMarqueeViewport(vp);
+            });
+        }
+        function renderExploreCommunityCards() {
+            if (!window.HollowExploreBonds) {
+                return;
+            }
+            var track = document.querySelector('#exploreCommunityViewport .explore-marquee-track');
+            if (!track) {
+                return;
+            }
+            var posts = shuffleArrayInPlace(HollowExploreBonds.listCommunityPosts().slice());
+            var avatarCls = [
+                'bg-secondary-container text-on-secondary-container',
+                'bg-tertiary-container text-on-tertiary-container',
+                'bg-primary-container/50 text-on-primary-container',
+                'bg-secondary-fixed text-secondary'
+            ];
+            if (!posts.length) {
+                track.innerHTML =
+                    '<div class="explore-marquee-chunk explore-community-chunk gap-5 lg:gap-6">' +
+                    '<p class="shrink-0 px-3 py-6 text-sm text-on-surface-variant">暂时还没有留言，稍后再来看看吧。</p></div>';
+                return;
+            }
+            var html = posts
+                .map(function (p, i) {
+                    var letter = escapeHtmlEx((p.author && p.author.charAt(0)) || '匿');
+                    var timeStr =
+                        (p.timeLabel && String(p.timeLabel).trim()) ||
+                        HollowExploreBonds.formatCommunityPostTime(p.ts);
+                    var ac = avatarCls[i % 4];
+                    return (
+                        '<article data-explore-post-id="' +
+                        escapeHtmlEx(p.id) +
+                        '" class="explore-marquee-item-community flex min-h-[220px] flex-col gap-4 rounded-xl border border-outline-variant/10 bg-surface-container-lowest p-5 shadow-[0_2px_16px_rgba(55,56,49,0.04)] sm:min-h-0 sm:p-6">' +
+                        '<p class="flex-1 text-base italic leading-relaxed text-on-surface sm:text-lg">「' +
+                        escapeHtmlEx(p.text) +
+                        '」</p>' +
+                        '<div class="mt-auto flex items-center gap-3 border-t border-surface-variant pt-4">' +
+                        '<div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold ' +
+                        ac +
+                        '">' +
+                        letter +
+                        '</div>' +
+                        '<div class="min-w-0 flex flex-col">' +
+                        '<span class="text-sm font-semibold text-on-surface">' +
+                        escapeHtmlEx(p.author) +
+                        '</span>' +
+                        '<span class="text-xs text-on-surface-variant">' +
+                        escapeHtmlEx(timeStr) +
+                        '</span>' +
+                        '</div>' +
+                        '<button type="button" class="explore-like ml-auto inline-flex items-center gap-1 text-on-surface-variant transition-colors hover:text-primary" aria-label="点赞" aria-pressed="false">' +
+                        '<span class="material-symbols-outlined text-lg">favorite</span>' +
+                        '<span class="explore-like-count text-xs font-semibold tabular-nums">0</span>' +
+                        '</button></div></article>'
+                    );
+                })
+                .join('');
+            track.innerHTML = '<div class="explore-marquee-chunk explore-community-chunk gap-5 lg:gap-6">' + html + '</div>';
+            var comTr = track;
+            if (comTr.classList.contains('explore-marquee-track--community') && posts.length > 5) {
+                comTr.style.animationDuration = Math.max(48, posts.length * 3.2) + 's';
+            }
+        }
+        function armExploreCommunityFromServer() {
+            return fetch('/api/explore/community-feed')
+                .then(function (res) {
+                    if (!res.ok) {
+                        throw new Error('feed');
+                    }
+                    return res.json();
+                })
+                .then(function (data) {
+                    if (window.HollowExploreBonds && data && data.posts) {
+                        HollowExploreBonds.mergeServerFeedPosts(data.posts);
+                    }
+                })
+                .catch(function () {
+                    if (window.HollowExploreBonds) {
+                        HollowExploreBonds.mergeServerFeedPosts(HollowExploreBonds.FALLBACK_COMMUNITY_POSTS);
+                    }
+                });
+        }
+        function markExploreWallpaperAnimated() {
+            document.querySelectorAll('.explore-wallpaper-media').forEach(function (img) {
+                var src = img.getAttribute('src') || '';
+                if (/\.gif(\?|#|$)/i.test(src)) {
+                    img.classList.add('explore-wallpaper-media--gif');
                 }
-                var chunks = track.querySelectorAll('.explore-marquee-chunk');
-                if (chunks.length !== 1) {
-                    return;
-                }
-                var copy = chunks[0].cloneNode(true);
-                copy.setAttribute('aria-hidden', 'true');
-                track.appendChild(copy);
             });
         }
         function applyExploreMarqueeSteps() {
@@ -489,23 +736,42 @@
                 HollowExploreBonds.syncCheerTopThree();
             }
             hydrateExploreEcho();
-            syncCommunityLikeCounts();
-            cloneExploreMarquees();
-            syncCommunityLikeCounts();
             bindCommunityLikeDelegation();
             bindInspirationCTA();
             bindStrangerWall();
-            requestAnimationFrame(function () {
-                requestAnimationFrame(applyExploreMarqueeSteps);
+
+            shuffleExploreWallpaperChunk();
+            document.querySelectorAll('[data-explore-marquee]').forEach(function (vp) {
+                if (vp.id === 'exploreCommunityViewport') {
+                    return;
+                }
+                cloneSingleMarqueeViewport(vp);
             });
+            markExploreWallpaperAnimated();
+
+            armExploreCommunityFromServer().finally(function () {
+                renderExploreCommunityCards();
+                syncCommunityLikeCounts();
+                cloneSingleMarqueeViewport(document.getElementById('exploreCommunityViewport'));
+                requestAnimationFrame(function () {
+                    requestAnimationFrame(applyExploreMarqueeSteps);
+                });
+            });
+
             document.querySelectorAll('[data-explore-marquee]').forEach(function (vp) {
                 if (typeof ResizeObserver !== 'undefined') {
                     var ro = new ResizeObserver(scheduleMarqueeSteps);
                     ro.observe(vp);
                 }
             });
-            window.addEventListener('resize', scheduleMarqueeSteps);
+            window.addEventListener('resize', scheduleMarqueeSteps, { passive: true });
             window.addEventListener('load', applyExploreMarqueeSteps);
+            if (typeof window.__hollowRegisterTurboCleanup === 'function') {
+                window.__hollowRegisterTurboCleanup(function () {
+                    window.removeEventListener('resize', scheduleMarqueeSteps, { passive: true });
+                    window.removeEventListener('load', applyExploreMarqueeSteps);
+                });
+            }
         }
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', init);

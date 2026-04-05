@@ -19,32 +19,85 @@
         '愿你被世界温柔接住，像你接住别人的难过那样。'
     ];
 
-    var DEFAULT_POSTS = [
-        {
-            id: 'c-seed-1',
-            text: '慢慢来，允许自己有低落的日子。我们在云端拥抱你。',
-            author: '匿名飞鸟',
-            likes: 24
-        },
-        {
-            id: 'c-seed-2',
-            text: '今天的焦虑好像少了一点点，虽然只有一点点，但也值得庆祝。',
-            author: '寻找微光',
-            likes: 18
-        },
-        {
-            id: 'c-seed-3',
-            text: '看到大家的留言，觉得不是一个人在战斗。谢谢你们的存在。',
-            author: '星空守望',
-            likes: 31
-        },
-        {
-            id: 'c-seed-4',
-            text: '把心事折成纸飞机吧，风会带走一点重量，留下轻盈的你。',
-            author: '晚风信笺',
-            likes: 15
-        }
+    /**
+     * 接口失败时的兜底列表（与后端内置前几则一致，避免空白页）。
+     */
+    var FALLBACK_COMMUNITY_POSTS = [
+        { id: 'c-seed-1', text: '慢慢来，允许自己有低落的日子。我们在云端拥抱你。', author: '匿名飞鸟', likes: 24, timeLabel: '2 小时前' },
+        { id: 'c-seed-2', text: '今天的焦虑好像少了一点点，虽然只有一点点，但也值得庆祝。', author: '寻找微光', likes: 18, timeLabel: '5 小时前' },
+        { id: 'c-seed-3', text: '看到大家的留言，觉得不是一个人在战斗。谢谢你们的存在。', author: '星空守望', likes: 31, timeLabel: '昨天' },
+        { id: 'c-seed-4', text: '把心事折成纸飞机吧，风会带走一点重量，留下轻盈的你。', author: '晚风信笺', likes: 15, timeLabel: '3 天前' },
+        { id: 'c-seed-5', text: '今天没有做得很好也没关系，你还在，就已经很棒了。', author: '云朵邮差', likes: 22, timeLabel: '1 小时前' },
+        { id: 'c-seed-6', text: '给自己泡一杯热的吧，暖胃也暖心。', author: '橘子汽水', likes: 19, timeLabel: '4 小时前' },
+        { id: 'c-seed-7', text: '你不是麻烦，你是值得被温柔对待的人。', author: '薄荷午后', likes: 27, timeLabel: '昨天' },
+        { id: 'c-seed-8', text: '天黑了就点灯，累了就歇一歇，世界不会怪你。', author: '月亮饼干', likes: 14, timeLabel: '2 天前' },
+        { id: 'c-seed-9', text: '有人正在远方为你加油，只是你还不知道。', author: '小森林', likes: 33, timeLabel: '6 小时前' },
+        { id: 'c-seed-10', text: '哭完记得擦擦脸，你笑起来真的很好看。', author: '晚风信箱', likes: 21, timeLabel: '昨天' },
+        { id: 'c-seed-11', text: '不必强撑坚强，柔软也是一种力量。', author: '星光旅人', likes: 17, timeLabel: '3 小时前' },
+        { id: 'c-seed-12', text: '今天的你，已经比昨天多走了一步。', author: '藏青林', likes: 26, timeLabel: '5 天前' }
     ];
+
+    function isUserCommunityPost(p) {
+        return p && p.id && /^c-\d{10,}-/.test(p.id);
+    }
+
+    function mergeServerFeedPosts(serverList) {
+        if (!Array.isArray(serverList)) {
+            return;
+        }
+        var raw = loadCommunity();
+        if (!raw) {
+            raw = [];
+        }
+        var userPosts = raw.filter(isUserCommunityPost);
+        var likeById = {};
+        raw.forEach(function (p) {
+            if (p && p.id) {
+                likeById[p.id] = p.likes;
+            }
+        });
+        var newSeeds = serverList.map(function (p) {
+            if (!p || !p.id || !p.text) {
+                return null;
+            }
+            var baseLikes = typeof p.likes === 'number' ? p.likes : parseInt(p.likes, 10) || 0;
+            var prev = likeById[p.id];
+            var likes = Math.max(baseLikes, prev != null ? prev : 0);
+            return {
+                id: p.id,
+                text: String(p.text).trim(),
+                author: (p.author && String(p.author).trim()) || '匿名旅人',
+                likes: likes,
+                ts: typeof p.ts === 'number' ? p.ts : Date.now(),
+                timeLabel: (p.timeLabel && String(p.timeLabel).trim()) || ''
+            };
+        }).filter(Boolean);
+        saveCommunity(newSeeds.concat(userPosts));
+    }
+
+    function formatCommunityPostTime(ts) {
+        if (ts == null || ts <= 0) {
+            return '';
+        }
+        var diff = Date.now() - ts;
+        if (diff < 60000) {
+            return '刚刚';
+        }
+        if (diff < 3600000) {
+            return Math.floor(diff / 60000) + ' 分钟前';
+        }
+        if (diff < 86400000) {
+            return Math.floor(diff / 3600000) + ' 小时前';
+        }
+        if (diff < 86400000 * 2) {
+            return '昨天';
+        }
+        var d = Math.floor(diff / 86400000);
+        if (d < 7) {
+            return d + ' 天前';
+        }
+        return '不久前';
+    }
 
     function loadGalleryLines() {
         try {
@@ -112,10 +165,8 @@
     function ensureCommunity() {
         var a = loadCommunity();
         if (!a) {
-            saveCommunity(DEFAULT_POSTS.map(function (p) {
-                return { id: p.id, text: p.text, author: p.author, likes: p.likes, ts: Date.now() };
-            }));
-            return loadCommunity();
+            saveCommunity([]);
+            return [];
         }
         return a;
     }
@@ -249,11 +300,10 @@
         return null;
     }
 
-    ensureCommunity();
-
     window.HollowExploreBonds = {
         LS_GALLERY: LS_GALLERY,
         LS_COMMUNITY: LS_COMMUNITY,
+        FALLBACK_COMMUNITY_POSTS: FALLBACK_COMMUNITY_POSTS,
         loadGalleryLines: loadGalleryLines,
         pickRandomGalleryLine: pickRandomGalleryLine,
         addGalleryLine: addGalleryLine,
@@ -261,11 +311,16 @@
         consumePendingHomeGreeting: consumePendingHomeGreeting,
         likePost: likePost,
         addCommunityPost: addCommunityPost,
+        mergeServerFeedPosts: mergeServerFeedPosts,
+        formatCommunityPostTime: formatCommunityPostTime,
         addStrangerLetter: addStrangerLetter,
         pickStrangerLetterText: pickStrangerLetterText,
         pickComfortFromCommunity: pickComfortFromCommunity,
         getCheerCommunityTexts: getCheerCommunityTexts,
         getPostById: getPostById,
+        listCommunityPosts: function () {
+            return ensureCommunity();
+        },
         syncCheerTopThree: function () {
             syncCheerTopThree(ensureCommunity());
         }

@@ -1,0 +1,238 @@
+/* 侧栏「小屋轻音乐」：黑胶碟片 + 横向切歌 + 竖向音量 + 播放时音符飘动 */
+
+#homeSidebarMusicRoot {
+    contain: layout paint;
+}
+
+.home-music-disc-wrap {
+    position: relative;
+    width: 6.25rem;
+    height: 6.25rem;
+    flex-shrink: 0;
+    isolation: isolate;
+}
+
+.home-music-disc {
+    position: relative;
+    width: 5.75rem;
+    height: 5.75rem;
+    margin: 0.25rem auto 0;
+    border-radius: 50%;
+    background:
+        radial-gradient(ellipse 65% 55% at 38% 32%, rgba(120, 120, 120, 0.45) 0%, transparent 52%),
+        radial-gradient(circle at 50% 50%, #1e1e1e 0%, #2a2a2a 38%, #353535 55%, #242424 72%, #181818 100%);
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+        inset 0 2px 8px rgba(255, 255, 255, 0.06),
+        inset 0 -6px 24px rgba(0, 0, 0, 0.55),
+        0 5px 18px rgba(55, 56, 49, 0.2),
+        0 2px 4px rgba(0, 0, 0, 0.12);
+    transition: transform 0.25s ease;
+}
+
+.home-music-disc--spinning {
+    animation: homeMusicDiscSpin 4.8s linear infinite;
+    backface-visibility: hidden;
+}
+
+@keyframes homeMusicDiscSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .home-music-disc--spinning {
+        animation: none;
+    }
+
+    .home-music-disc-wrap--playing .home-music-note {
+        animation: none !important;
+        opacity: 0 !important;
+    }
+}
+
+/* 高光弧：不随碟片旋转时更稳——放在碟片上随碟片转 */
+.home-music-disc__shine {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: linear-gradient(
+        125deg,
+        transparent 35%,
+        rgba(255, 255, 255, 0.09) 42%,
+        rgba(255, 255, 255, 0.02) 48%,
+        transparent 55%
+    );
+    pointer-events: none;
+}
+
+.home-music-disc__groove {
+    position: absolute;
+    inset: 6px;
+    border-radius: 50%;
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+        inset 0 0 0 10px rgba(0, 0, 0, 0.18),
+        inset 0 0 0 11px rgba(255, 255, 255, 0.04),
+        inset 0 0 0 20px rgba(0, 0, 0, 0.1),
+        inset 0 0 0 21px rgba(255, 255, 255, 0.025);
+    pointer-events: none;
+}
+
+.home-music-disc__groove--mid {
+    inset: 18px;
+    box-shadow:
+        inset 0 0 0 1px rgba(0, 0, 0, 0.35),
+        inset 0 0 0 2px rgba(255, 255, 255, 0.04),
+        inset 0 0 12px rgba(0, 0, 0, 0.4);
+}
+
+.home-music-disc__hole {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 0.95rem;
+    height: 0.95rem;
+    margin: -0.475rem 0 0 -0.475rem;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #fffefb 0%, #f0ebe3 45%, #e8e4dc 100%);
+    box-shadow:
+        inset 0 2px 4px rgba(255, 255, 255, 0.85),
+        inset 0 -2px 6px rgba(0, 0, 0, 0.22),
+        0 0 0 1px rgba(0, 0, 0, 0.15);
+}
+
+/* 音符：仅 .home-music-disc-wrap--playing 时播放动画，暂停即停 */
+.home-music-notes {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: visible;
+}
+
+.home-music-note {
+    position: absolute;
+    left: 50%;
+    top: 48%;
+    font-size: 0.72rem;
+    line-height: 1;
+    color: rgba(147, 82, 82, 0.88);
+    text-shadow: 0 1px 1px rgba(255, 252, 247, 0.9);
+    opacity: 0;
+    will-change: transform, opacity;
+}
+
+.home-music-disc-wrap--playing .home-music-note:nth-child(1) {
+    animation: homeMusicNoteBurstA 5s ease-in-out infinite;
+}
+
+.home-music-disc-wrap--playing .home-music-note:nth-child(2) {
+    animation: homeMusicNoteBurstB 5s ease-in-out infinite;
+    animation-delay: 1.15s;
+}
+
+.home-music-disc-wrap--playing .home-music-note:nth-child(3) {
+    animation: homeMusicNoteBurstC 5s ease-in-out infinite;
+    animation-delay: 2.35s;
+}
+
+.home-music-disc-wrap--playing .home-music-note:nth-child(4) {
+    animation: homeMusicNoteBurstD 5s ease-in-out infinite;
+    animation-delay: 3.5s;
+}
+
+@keyframes homeMusicNoteBurstA {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) translate(14px, 4px) rotate(-8deg) scale(0.85);
+    }
+    9% {
+        opacity: 0.92;
+    }
+    34% {
+        opacity: 0;
+        transform: translate(-50%, -50%) translate(26px, -42px) rotate(4deg) scale(1.05);
+    }
+    34.01%,
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) translate(14px, 4px) rotate(-8deg) scale(0.85);
+    }
+}
+
+@keyframes homeMusicNoteBurstB {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) translate(-18px, 8px) rotate(10deg) scale(0.8);
+    }
+    9% {
+        opacity: 0.88;
+    }
+    34% {
+        opacity: 0;
+        transform: translate(-50%, -50%) translate(-32px, -36px) rotate(-6deg) scale(1);
+    }
+    34.01%,
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) translate(-18px, 8px) rotate(10deg) scale(0.8);
+    }
+}
+
+@keyframes homeMusicNoteBurstC {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) translate(6px, 16px) rotate(6deg) scale(0.82);
+    }
+    9% {
+        opacity: 0.85;
+    }
+    34% {
+        opacity: 0;
+        transform: translate(-50%, -50%) translate(10px, -48px) rotate(-12deg) scale(1.02);
+    }
+    34.01%,
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) translate(6px, 16px) rotate(6deg) scale(0.82);
+    }
+}
+
+@keyframes homeMusicNoteBurstD {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) translate(-10px, -6px) rotate(-4deg) scale(0.78);
+    }
+    9% {
+        opacity: 0.9;
+    }
+    34% {
+        opacity: 0;
+        transform: translate(-50%, -50%) translate(-24px, -44px) rotate(8deg) scale(1.08);
+    }
+    34.01%,
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) translate(-10px, -6px) rotate(-4deg) scale(0.78);
+    }
+}
+
+/* 竖向音量条：旋转横向 range */
+.home-music-vol-wrap {
+    display: flex;
+    height: 5.75rem;
+    width: 1.75rem;
+    align-items: center;
+    justify-content: center;
+}
+
+.home-music-vol-vertical {
+    width: 5rem;
+    height: 1.25rem;
+    margin: 0;
+    cursor: pointer;
+    transform: rotate(-90deg);
+    transform-origin: center center;
+    accent-color: #935252;
+}
