@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>挚友专属 · 启动中</title>
+    <script type="module" src="/main.js" defer></script>
+  </head>
+  <body>
+    <main class="container">
+      <section id="boot-panel">
+        <h1>正在启动治愈树洞客户端...</h1>
+        <p id="status">正在拉起本地服务，请稍候。</p>
+        <div class="actions">
+        <button id="retry-btn" type="button">重试启动</button>
+        <button id="open-logs-btn" type="button">打开日志目录</button>
+        <button id="open-runtime-btn" type="button">打开运行目录</button>
+        </div>
+      </section>
+      <section id="app-panel" class="hidden">
+        <iframe id="app-frame" title="FriendHollow" src="about:blank"></iframe>
+      </section>
+    </main>
+  </body>
+</html>

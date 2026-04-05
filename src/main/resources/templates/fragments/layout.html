@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+  通用左侧导航片段
+  入参 activePage: home / cheer / starlight / reminder / meditation / explore（后二者侧栏无对应项则无高亮）
+-->
+<nav th:fragment="sidebar(activePage)"
+     class="mobile-sidebar z-40 flex w-full shrink-0 flex-col gap-3 sm:gap-4 lg:gap-6 lg:fixed lg:left-0 lg:top-0 lg:h-screen lg:w-72 lg:overflow-y-auto
+            max-lg:sticky max-lg:top-0 py-3 pt-[max(0.75rem,env(safe-area-inset-top,0px))] px-3 sm:px-5 lg:py-12 lg:px-6 lg:pt-12 rounded-b-3xl lg:rounded-none lg:rounded-r-[3rem]
+            bg-[#fcf9f3] dark:bg-stone-900/50 backdrop-blur-xl shadow-md lg:shadow-[2rem_0_3rem_rgba(55,56,49,0.04)]">
+    <div class="mb-0 shrink-0 px-1 lg:mb-8 lg:px-4">
+        <h1 class="text-lg font-bold text-[#935252] dark:text-[#fdabab] font-headline sm:text-2xl">清新小屋</h1>
+        <p class="hidden text-xs font-label text-[#566953] opacity-70 tracking-tight sm:block sm:text-sm">Emotional Safety &amp; Healing</p>
+    </div>
+    <div class="mobile-nav-scroll flex flex-row flex-nowrap gap-2 overflow-x-auto pb-1 lg:flex-col lg:flex-nowrap lg:overflow-visible lg:gap-0 lg:space-y-4 lg:pb-0">
+        <a id="navEmotionTreeLink" th:href="@{/home}"
+           class="flex shrink-0 items-center space-x-2 rounded-full p-3 text-sm transition-all duration-150 group font-headline tracking-wide touch-manipulation sm:text-base lg:space-x-4 lg:p-4 lg:text-lg"
+           th:classappend="${activePage == 'home'} ? ' bg-gradient-to-br from-[#935252] to-[#fdabab] text-white shadow-lg scale-105 duration-300' : ' text-[#566953] dark:text-stone-400 hover:bg-[#f5f0e5] dark:hover:bg-stone-800 hover:opacity-90 hover:scale-[1.02] active:scale-95'">
+            <span class="material-symbols-outlined">spa</span>
+            <span>情绪树洞</span>
+        </a>
+        <a th:href="@{/cheer}"
+           class="flex shrink-0 items-center space-x-2 rounded-full p-3 text-sm transition-all duration-150 group font-headline tracking-wide touch-manipulation sm:text-base lg:space-x-4 lg:p-4 lg:text-lg"
+           th:classappend="${activePage == 'cheer'} ? ' bg-gradient-to-br from-[#935252] to-[#fdabab] text-white shadow-lg scale-105 duration-300' : ' text-[#566953] dark:text-stone-400 hover:bg-[#f5f0e5] dark:hover:bg-stone-800 hover:opacity-90 hover:scale-[1.02] active:scale-95'">
+            <span class="material-symbols-outlined">favorite</span>
+            <span>挚友打气站</span>
+        </a>
+        <a th:href="@{/starlight}"
+           class="flex shrink-0 items-center space-x-2 rounded-full p-3 text-sm transition-all duration-150 group font-headline tracking-wide touch-manipulation sm:text-base lg:space-x-4 lg:p-4 lg:text-lg"
+           th:classappend="${activePage == 'starlight'} ? ' bg-gradient-to-br from-[#935252] to-[#fdabab] text-white shadow-lg scale-105 duration-300' : ' text-[#566953] dark:text-stone-400 hover:bg-[#f5f0e5] dark:hover:bg-stone-800 hover:opacity-90 hover:scale-[1.02] active:scale-95'">
+            <span class="material-symbols-outlined">auto_awesome</span>
+            <span>友谊星光墙</span>
+        </a>
+        <a th:href="@{/reminder}"
+           class="flex shrink-0 items-center space-x-2 rounded-full p-3 text-sm transition-all duration-150 group font-headline tracking-wide touch-manipulation sm:text-base lg:space-x-4 lg:p-4 lg:text-lg"
+           th:classappend="${activePage == 'reminder'} ? ' bg-gradient-to-br from-[#935252] to-[#fdabab] text-white shadow-lg scale-105 duration-300' : ' text-[#566953] dark:text-stone-400 hover:bg-[#f5f0e5] dark:hover:bg-stone-800 hover:opacity-90 hover:scale-[1.02] active:scale-95'">
+            <span class="material-symbols-outlined">notifications_active</span>
+            <span>温柔提醒</span>
+        </a>
+    </div>
+    <div id="navProfileCard" class="mt-1 shrink-0 px-1 pb-0 max-lg:min-w-0 lg:mt-auto lg:px-4 lg:pb-4">
+        <div class="flex items-center space-x-3 rounded-2xl bg-surface-container-low/50 p-2 sm:p-3">
+            <div class="w-10 h-10 shrink-0 rounded-full overflow-hidden ring-1 ring-outline-variant/20">
+                <img class="h-full w-full object-cover" alt="头像"
+                     th:src="${navAvatarUrl}" src="/images/profile-avatar.png"/>
+            </div>
+            <div class="min-w-0 flex-1">
+                <p class="truncate text-sm font-bold text-on-surface" id="nickname" th:text="${navNickname}">醋酸钠</p>
+                <p class="truncate text-xs text-on-surface-variant" id="onlineDuration" th:text="${navSidebarSubtitle}">今日心情：宁静</p>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- 通用顶部栏片段；activeTopNav: home | explore | meditation | none（none 时三项均为次要样式） -->
+<!-- 注意：th:classappend 内勿写 Tailwind 任意值里的 #，否则 OGNL 会把 # 当语法解析，导致整段表达式失败、链接异常 -->
+<header th:fragment="topbar(activeTopNav)"
+        class="sticky top-0 z-50 flex w-full flex-wrap items-center justify-between gap-3 border-b border-outline-variant/10 bg-surface/95 py-3 backdrop-blur-md max-sm:pl-[max(1rem,env(safe-area-inset-left,0px))] max-sm:pr-[max(1rem,env(safe-area-inset-right,0px))] sm:gap-4 sm:px-8 sm:py-4 lg:px-12 lg:py-8">
+    <nav class="relative flex flex-wrap items-center gap-3 sm:gap-6 lg:gap-8" aria-label="顶栏主导航">
+        <a th:href="@{/home}"
+           class="font-headline inline-block transition-colors"
+           th:classappend="${activeTopNav == 'home'} ? ' font-semibold text-primary border-b-2 border-primary-container pb-0.5' : ' text-secondary hover:text-primary'">首页</a>
+        <a th:href="@{/explore}"
+           class="font-headline inline-block text-sm transition-colors sm:text-base"
+           th:classappend="${activeTopNav == 'explore'} ? ' font-semibold text-primary border-b-2 border-primary-container pb-0.5' : ' text-secondary hover:text-primary'">探索</a>
+        <a th:href="@{/meditation}"
+           class="font-headline inline-block text-sm transition-colors sm:text-base"
+           th:classappend="${activeTopNav == 'meditation'} ? ' font-semibold text-primary border-b-2 border-primary-container pb-0.5' : ' text-secondary hover:text-primary'">冥想</a>
+    </nav>
+    <div class="flex w-full flex-wrap items-center justify-end gap-3 sm:w-auto sm:gap-4 lg:gap-6">
+        <div class="relative min-w-0 flex-1 group sm:min-w-[12rem] sm:flex-none lg:min-w-0">
+            <div class="flex w-full max-w-full items-center rounded-full border border-outline-variant/15 bg-surface-container-lowest px-3 py-2 shadow-sm focus-within:border-primary/40 transition-all sm:max-w-sm lg:w-64">
+                <span class="material-symbols-outlined text-outline mr-2">search</span>
+                <input class="bg-transparent border-none focus:ring-0 text-sm font-body w-full placeholder:text-outline-variant"
+                       placeholder="寻找平静..." type="text"/>
+            </div>
+        </div>
+        <div class="flex shrink-0 items-center gap-1 sm:gap-4">
+            <button type="button" class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-[#935252] transition-all hover:bg-primary/10 hover:opacity-90 touch-manipulation" aria-label="设置">
+                <span class="material-symbols-outlined text-[1.35rem] sm:text-2xl">settings</span>
+            </button>
+            <button type="button" class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-[#935252] transition-all hover:bg-primary/10 hover:opacity-90 touch-manipulation" aria-label="账户">
+                <span class="material-symbols-outlined text-[1.35rem] sm:text-2xl">account_circle</span>
+            </button>
+        </div>
+    </div>
+</header>
+</body>
+</html>

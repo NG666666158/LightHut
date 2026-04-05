@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html class="light" lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5"/>
+    <title>Luminous Sanctuary - 温柔提醒</title>
+    <th:block th:replace="~{fragments/common-head :: coreDeps()}"></th:block>
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            min-height: 100dvh;
+            width: 100%;
+            max-width: 100vw;
+            overflow-x: hidden;
+            overflow-y: auto;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #fffcf7;
+            color: #373831;
+        }
+
+        .font-headline { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .glass-effect { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+
+        /* 月历：仅露出一行（一周），纵向滚动切换周，带轻微吸附 */
+        .reminder-weeks-scroll {
+            overflow-y: auto;
+            overflow-x: hidden;
+            overscroll-behavior-y: contain;
+            scroll-snap-type: y mandatory;
+            scroll-padding-top: 2px;
+            scroll-padding-bottom: 2px;
+            -webkit-overflow-scrolling: touch;
+            outline: none;
+        }
+        .reminder-weeks-scroll:focus-visible {
+            box-shadow: 0 0 0 2px rgba(147, 82, 82, 0.25);
+            border-radius: 0.5rem;
+        }
+        .calendar-week-row {
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+        }
+    </style>
+</head>
+<body class="flex min-h-screen w-full max-w-full flex-col overflow-x-hidden bg-background font-body text-on-surface lg:flex-row">
+    <nav th:replace="~{fragments/layout :: sidebar('reminder')}"></nav>
+
+    <main class="relative flex min-h-screen min-w-0 w-full flex-1 flex-col overflow-y-auto bg-surface pb-24 sm:pb-28 lg:ml-72 lg:pb-0">
+        <header th:replace="~{fragments/layout :: topbar(activeTopNav='none')}"></header>
+
+        <!-- 右侧主体（温柔提醒内容） -->
+        <div class="w-full space-y-10 px-4 py-8 sm:px-8 lg:space-y-12 lg:px-12 xl:px-20 lg:py-12">
+            <section class="flex w-full flex-col items-stretch justify-between gap-4 sm:flex-row sm:items-center">
+                <div class="space-y-4 min-w-0">
+                    <h2 class="text-2xl font-extrabold font-headline leading-tight tracking-tight text-on-surface sm:text-4xl md:text-5xl lg:text-6xl">温柔提醒</h2>
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:space-x-4 sm:gap-0">
+                        <div class="hidden h-[1px] w-12 shrink-0 bg-primary/30 sm:block"></div>
+                        <p class="text-base font-body font-medium italic text-secondary-dim sm:text-lg md:text-xl">在这安静的一刻，请不要忘记关照自己。</p>
+                    </div>
+                </div>
+                <div class="flex shrink-0 gap-2 sm:gap-4">
+                    <button type="button" class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-surface-container touch-manipulation hover:opacity-70 transition-all sm:h-12 sm:w-12" aria-label="花艺">
+                        <span class="material-symbols-outlined text-[#935252]">local_florist</span>
+                    </button>
+                    <button type="button" class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-surface-container touch-manipulation hover:opacity-70 transition-all sm:h-12 sm:w-12" aria-label="自我关怀">
+                        <span class="material-symbols-outlined text-[#935252]">self_care</span>
+                    </button>
+                </div>
+            </section>
+
+            <div id="echoReminderBanner" class="hidden w-full rounded-xl border border-primary/25 bg-primary-container/15 px-4 py-4 shadow-sm sm:px-6">
+                <p class="text-sm leading-relaxed text-on-surface">你刚在首页保存了自我对话。是否添加一条「每周日 · 回顾时光回响」的温柔提醒？</p>
+                <div class="mt-3 flex flex-wrap gap-3">
+                    <button type="button" id="echoReminderOpenBtn" class="rounded-full bg-gradient-to-br from-primary to-primary-container px-5 py-2.5 text-sm font-semibold text-white shadow-sm">一键填入提醒</button>
+                    <button type="button" id="echoReminderDismissBtn" class="rounded-full border border-outline-variant px-4 py-2.5 text-sm text-on-surface-variant hover:text-on-surface">暂不</button>
+                </div>
+            </div>
+
+            <section class="rounded-xl bg-surface-container-low p-4 shadow-sm glass-effect sm:p-6 lg:p-8">
+                <div class="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                        <h3 id="calMonthTitle" class="font-headline text-2xl font-semibold text-on-surface sm:text-3xl lg:text-4xl">加载中…</h3>
+                        <p id="calSubtitle" class="text-secondary font-medium mt-1"> </p>
+                    </div>
+                    <div class="flex gap-4">
+                        <button type="button" id="calPrevBtn" class="p-2 hover:bg-surface-container-high rounded-full transition-colors"><span class="material-symbols-outlined">chevron_left</span></button>
+                        <button type="button" id="calNextBtn" class="p-2 hover:bg-surface-container-high rounded-full transition-colors"><span class="material-symbols-outlined">chevron_right</span></button>
+                    </div>
+                </div>
+                <p id="calLoadError" class="text-red-600 text-sm mb-4 hidden"></p>
+                <div id="calendarWeekHeader" class="mb-2 grid grid-cols-7 gap-1 sm:gap-2 lg:gap-4"></div>
+                <div id="calendarWeeksScroll" tabindex="0" class="reminder-weeks-scroll hide-scrollbar cursor-ns-resize">
+                    <div id="calendarWeeksInner" class="relative"></div>
+                </div>
+            </section>
+
+            <section class="pb-24">
+                <div class="flex items-center justify-between mb-8">
+                    <h3 class="text-secondary flex items-center gap-3 font-headline text-2xl">
+                        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">task_alt</span>待办提醒
+                    </h3>
+                    <span id="todoCountBadge" class="text-outline tracking-widest bg-surface-container px-4 py-1 rounded-full text-xs">本日共 0 项</span>
+                </div>
+                <p id="todoLoadError" class="text-red-600 text-sm mb-4 hidden"></p>
+                <div id="todoList" class="space-y-4"></div>
+            </section>
+        </div>
+    </main>
+
+<button type="button" id="reminderFabBtn" class="group fixed z-50 flex items-center gap-2 rounded-full bg-gradient-to-br from-primary to-primary-container px-4 py-3.5 text-white shadow-2xl shadow-primary/30 transition-all hover:scale-105 active:scale-95 touch-manipulation bottom-[max(1.25rem,env(safe-area-inset-bottom,0px))] right-[max(1rem,env(safe-area-inset-right,0px))] sm:bottom-10 sm:right-10 sm:gap-4 sm:px-8 sm:py-5 lg:bottom-[max(3rem,env(safe-area-inset-bottom,0px))] lg:right-[max(3rem,env(safe-area-inset-right,0px))]" title="新增温柔提醒" aria-label="新增温柔提醒">
+    <span class="material-symbols-outlined text-2xl group-hover:rotate-90 transition-transform duration-500">add</span>
+    <span class="hidden font-headline text-sm font-semibold tracking-wide sm:inline sm:text-lg">新增提醒</span>
+</button>
+
+<div id="reminderModal" class="fixed inset-0 z-[100] hidden items-end justify-center p-0 sm:items-center sm:p-6">
+    <div id="reminderModalBackdrop" class="absolute inset-0 bg-black/45"></div>
+    <div class="relative max-h-[min(90dvh,100%)] w-full max-w-md overflow-y-auto overscroll-contain rounded-t-2xl border border-outline-variant/30 border-b-0 bg-surface-container-lowest p-6 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] shadow-2xl sm:rounded-2xl sm:border-b sm:p-8 sm:pb-8">
+        <h3 class="font-headline text-lg font-bold text-on-surface mb-4">新增温柔提醒</h3>
+        <div class="space-y-3">
+            <div>
+                <label class="block text-xs text-on-surface-variant mb-1">标题 <span class="text-red-600">*</span></label>
+                <input id="rmTitle" type="text" maxlength="80" class="w-full rounded-xl border border-outline-variant/40 bg-white px-4 py-2 text-sm text-on-surface"/>
+            </div>
+            <div>
+                <label class="block text-xs text-on-surface-variant mb-1">副文案</label>
+                <input id="rmNote" type="text" maxlength="200" class="w-full rounded-xl border border-outline-variant/40 bg-white px-4 py-2 text-sm text-on-surface"/>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs text-on-surface-variant mb-1">日期 <span class="text-red-600">*</span></label>
+                    <input id="rmDate" type="date" class="w-full rounded-xl border border-outline-variant/40 bg-white px-3 py-2 text-sm"/>
+                </div>
+                <div>
+                    <label class="block text-xs text-on-surface-variant mb-1">时间 <span class="text-red-600">*</span></label>
+                    <input id="rmTime" type="time" class="w-full rounded-xl border border-outline-variant/40 bg-white px-3 py-2 text-sm"/>
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs text-on-surface-variant mb-1">图标（Material 图标名，可选）</label>
+                <input id="rmIcon" type="text" placeholder="notifications" maxlength="40" class="w-full rounded-xl border border-outline-variant/40 bg-white px-4 py-2 text-sm"/>
+            </div>
+            <p id="rmFormError" class="text-red-600 text-xs hidden"></p>
+        </div>
+        <div class="flex gap-3 mt-6">
+            <button type="button" id="rmCancelBtn" class="flex-1 py-3 rounded-full border border-outline-variant text-on-surface font-medium hover:bg-surface-container-high transition-colors">取消</button>
+            <button type="button" id="rmSubmitBtn" class="flex-1 py-3 rounded-full bg-gradient-to-br from-primary to-primary-container text-white font-semibold shadow-md">保存</button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    var API_MONTH = '/api/reminder/month';
+    var API_DAY = '/api/reminder/day';
+    var API_CREATE = '/api/reminder';
+
+    var viewYear;
+    var viewMonth;
+    var selectedDate;
+
+    function pad(n) { return n < 10 ? '0' + n : '' + n; }
+    function todayIso() {
+        var d = new Date();
+        return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+    }
+
+    function escapeHtml(s) {
+        if (s == null) return '';
+        return String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function setCalError(msg) {
+        var el = document.getElementById('calLoadError');
+        if (msg) { el.textContent = msg; el.classList.remove('hidden'); } else { el.classList.add('hidden'); }
+    }
+    function setTodoError(msg) {
+        var el = document.getElementById('todoLoadError');
+        if (msg) { el.textContent = msg; el.classList.remove('hidden'); } else { el.classList.add('hidden'); }
+    }
+
+    function renderMonth(data) {
+        document.getElementById('calMonthTitle').textContent = data.monthTitle || '';
+        document.getElementById('calSubtitle').textContent = data.subtitle || '';
+        var headerEl = document.getElementById('calendarWeekHeader');
+        var innerEl = document.getElementById('calendarWeeksInner');
+        headerEl.innerHTML = '';
+        innerEl.innerHTML = '';
+        var headers = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+        headers.forEach(function (h) {
+            var d = document.createElement('div');
+            d.className = 'text-center font-headline text-stone-400 text-sm py-2';
+            d.textContent = h;
+            headerEl.appendChild(d);
+        });
+
+        var cells = data.cells || [];
+        for (var w = 0; w < cells.length; w += 7) {
+            var weekRow = document.createElement('div');
+            weekRow.className = 'calendar-week-row grid grid-cols-7 gap-4 py-1';
+            for (var k = 0; k < 7 && w + k < cells.length; k++) {
+                weekRow.appendChild(renderCell(cells[w + k]));
+            }
+            innerEl.appendChild(weekRow);
+        }
+
+        requestAnimationFrame(function () {
+            var scroll = document.getElementById('calendarWeeksScroll');
+            var row = innerEl.querySelector('.calendar-week-row');
+            if (scroll && row) {
+                scroll.style.height = (row.offsetHeight + 4) + 'px';
+            }
+            scrollToSelectedWeek();
+        });
+    }
+
+    function renderCell(cell) {
+        var div = document.createElement('div');
+        div.className = 'h-14 md:h-16 rounded-lg transition-all duration-200 ease-out';
+        if (cell.day == null) {
+            return div;
+        }
+        div.className += ' flex flex-col items-center justify-center cursor-pointer hover:bg-surface-container-high active:scale-[0.97]';
+        if (cell.today) {
+            div.className += ' bg-primary text-white font-bold shadow-lg shadow-primary/20';
+            div.classList.add('is-today');
+        } else {
+            div.className += ' text-stone-600';
+        }
+        if (selectedDate && cell.date === selectedDate) {
+            div.className += ' ring-2 ring-primary/50 ring-offset-1';
+        }
+        if (cell.date) {
+            div.setAttribute('data-date', cell.date);
+        }
+        var inner = document.createElement('div');
+        inner.className = 'relative flex flex-col items-center justify-center w-full h-full';
+        var num = document.createElement('span');
+        num.textContent = String(cell.day);
+        inner.appendChild(num);
+        if (cell.hasReminder) {
+            var dot = document.createElement('div');
+            dot.className = 'absolute bottom-2 w-1.5 h-1.5 rounded-full ' + (cell.today ? 'bg-white' : 'bg-primary');
+            inner.appendChild(dot);
+        }
+        div.appendChild(inner);
+        div.addEventListener('click', function () {
+            if (cell.date) {
+                selectedDate = cell.date;
+                loadDay();
+                loadMonth();
+            }
+        });
+        return div;
+    }
+
+    function scrollToSelectedWeek() {
+        var scroll = document.getElementById('calendarWeeksScroll');
+        var inner = document.getElementById('calendarWeeksInner');
+        if (!scroll || !inner) return;
+        var rows = inner.querySelectorAll('.calendar-week-row');
+        for (var i = 0; i < rows.length; i++) {
+            var withDate = rows[i].querySelector('[data-date="' + selectedDate + '"]');
+            if (withDate) {
+                scroll.scrollTop = rows[i].offsetTop;
+                return;
+            }
+        }
+        for (var j = 0; j < rows.length; j++) {
+            if (rows[j].querySelector('.is-today')) {
+                scroll.scrollTop = rows[j].offsetTop;
+                return;
+            }
+        }
+        scroll.scrollTop = 0;
+    }
+
+    var resizeTimer;
+    window.addEventListener('resize', function () {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function () {
+            var scroll = document.getElementById('calendarWeeksScroll');
+            var row = document.querySelector('#calendarWeeksInner .calendar-week-row');
+            if (scroll && row) {
+                scroll.style.height = (row.offsetHeight + 4) + 'px';
+            }
+            scrollToSelectedWeek();
+        }, 120);
+    });
+
+    function renderTodos(data) {
+        document.getElementById('todoCountBadge').textContent = '本日共 ' + (data.totalCount || 0) + ' 项';
+        var list = document.getElementById('todoList');
+        list.innerHTML = '';
+        (data.items || []).forEach(function (item) {
+            var row = document.createElement('div');
+            row.className = 'group rounded-lg p-6 flex items-center justify-between transition-all hover:shadow-xl hover:shadow-stone-200/50 cursor-pointer';
+            if (item.done) {
+                row.className += ' bg-surface-container-low/50 opacity-60';
+            } else {
+                row.className += ' bg-surface-container-lowest';
+            }
+            row.setAttribute('data-id', item.id);
+            var iconWrap = item.done ? 'bg-surface-container-highest text-stone-500' : 'bg-secondary-container text-secondary';
+            var titleClass = 'text-xl font-semibold text-on-surface' + (item.done ? ' line-through' : '');
+            var iconName = item.icon || 'notifications';
+            row.innerHTML =
+                '<div class="flex items-center gap-6 flex-1 min-w-0">' +
+                '<div class="w-12 h-12 rounded-full flex items-center justify-center shrink-0 ' + iconWrap + '">' +
+                '<span class="material-symbols-outlined">' + escapeHtml(iconName) + '</span></div>' +
+                '<div class="min-w-0"><h4 class="' + titleClass + '">' + escapeHtml(item.title) + '</h4>' +
+                (item.note ? '<p class="text-stone-400 text-sm truncate">' + escapeHtml(item.note) + '</p>' : '') +
+                '</div></div>' +
+                '<span class="text-sm font-headline text-stone-400 shrink-0 ml-2">' + escapeHtml(item.timeDisplay) + '</span>';
+            row.addEventListener('click', function () {
+                toggleDone(item.id, !item.done);
+            });
+            list.appendChild(row);
+        });
+    }
+
+    function loadMonth() {
+        setCalError('');
+        var url = API_MONTH + '?year=' + viewYear + '&month=' + viewMonth;
+        fetch(url)
+            .then(function (res) { return res.json().then(function (j) { if (!res.ok) throw new Error(j.error || '加载失败'); return j; }); })
+            .then(renderMonth)
+            .catch(function (e) { setCalError(e.message); });
+    }
+
+    function loadDay() {
+        setTodoError('');
+        fetch(API_DAY + '?date=' + encodeURIComponent(selectedDate))
+            .then(function (res) { return res.json().then(function (j) { if (!res.ok) throw new Error(j.error || '加载失败'); return j; }); })
+            .then(renderTodos)
+            .catch(function (e) { setTodoError(e.message); });
+    }
+
+    function toggleDone(id, done) {
+        fetch('/api/reminder/' + id + '/done', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ done: done })
+        })
+            .then(function (res) {
+                return res.json().then(function (j) {
+                    if (!res.ok) throw new Error(j.error || '操作失败');
+                    return j;
+                });
+            })
+            .then(function () {
+                loadDay();
+                loadMonth();
+            })
+            .catch(function (e) { alert(e.message); });
+    }
+
+    function shiftMonth(delta) {
+        viewMonth += delta;
+        if (viewMonth > 12) { viewMonth = 1; viewYear++; }
+        if (viewMonth < 1) { viewMonth = 12; viewYear--; }
+        var prefix = viewYear + '-' + pad(viewMonth) + '-';
+        if (!selectedDate || selectedDate.indexOf(prefix) !== 0) {
+            selectedDate = prefix + '01';
+        }
+        loadMonth();
+        loadDay();
+    }
+
+    document.getElementById('calPrevBtn').addEventListener('click', function () { shiftMonth(-1); });
+    document.getElementById('calNextBtn').addEventListener('click', function () { shiftMonth(1); });
+
+    var modal = document.getElementById('reminderModal');
+    function openModal() {
+        document.getElementById('rmFormError').classList.add('hidden');
+        document.getElementById('rmTitle').value = '';
+        document.getElementById('rmNote').value = '';
+        document.getElementById('rmDate').value = selectedDate;
+        document.getElementById('rmTime').value = '12:00';
+        document.getElementById('rmIcon').value = '';
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+    function closeModal() {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+    document.getElementById('reminderFabBtn').addEventListener('click', openModal);
+    document.getElementById('rmCancelBtn').addEventListener('click', closeModal);
+    document.getElementById('reminderModalBackdrop').addEventListener('click', closeModal);
+
+    document.getElementById('rmSubmitBtn').addEventListener('click', function () {
+        var title = document.getElementById('rmTitle').value.trim();
+        var note = document.getElementById('rmNote').value.trim();
+        var date = document.getElementById('rmDate').value;
+        var timeVal = document.getElementById('rmTime').value;
+        var icon = document.getElementById('rmIcon').value.trim();
+        var err = document.getElementById('rmFormError');
+        if (!title) { err.textContent = '请填写标题'; err.classList.remove('hidden'); return; }
+        if (!date) { err.textContent = '请选择日期'; err.classList.remove('hidden'); return; }
+        if (!timeVal) { err.textContent = '请选择时间'; err.classList.remove('hidden'); return; }
+        var parts = timeVal.split(':');
+        var timeStr = pad(parseInt(parts[0], 10)) + ':' + pad(parseInt(parts[1], 10));
+        var body = { title: title, remindDate: date, time: timeStr };
+        if (note) body.note = note;
+        if (icon) body.icon = icon;
+        err.classList.add('hidden');
+        var btn = document.getElementById('rmSubmitBtn');
+        btn.disabled = true;
+        fetch(API_CREATE, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        })
+            .then(function (res) {
+                return res.json().then(function (j) {
+                    if (!res.ok) throw new Error(j.error || '保存失败');
+                    return j;
+                });
+            })
+            .then(function () {
+                closeModal();
+                selectedDate = date;
+                var dp = date.split('-');
+                viewYear = parseInt(dp[0], 10);
+                viewMonth = parseInt(dp[1], 10);
+                loadMonth();
+                loadDay();
+            })
+            .catch(function (e) {
+                err.textContent = e.message;
+                err.classList.remove('hidden');
+            })
+            .finally(function () {
+                btn.disabled = false;
+            });
+    });
+
+    (function setupWeekWheel() {
+        var el = document.getElementById('calendarWeeksScroll');
+        if (!el) return;
+        el.addEventListener('wheel', function (e) {
+            var inner = document.getElementById('calendarWeeksInner');
+            var row = inner && inner.querySelector('.calendar-week-row');
+            if (!row) return;
+            var step = row.offsetHeight;
+            if (step < 4) return;
+            if (Math.abs(e.deltaY) < 1) return;
+            e.preventDefault();
+            var dir = e.deltaY > 0 ? 1 : -1;
+            var maxScroll = el.scrollHeight - el.clientHeight;
+            if (maxScroll <= 0) return;
+            var next = el.scrollTop + dir * step;
+            next = Math.max(0, Math.min(maxScroll, next));
+            el.scrollTo({ top: next, behavior: 'smooth' });
+        }, { passive: false });
+    })();
+
+    function nextSundayIso() {
+        var d = new Date();
+        var day = d.getDay();
+        var add = (7 - day) % 7;
+        if (add === 0) {
+            add = 7;
+        }
+        d.setDate(d.getDate() + add);
+        return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+    }
+
+    (function echoReminderLinkage() {
+        try {
+            if (sessionStorage.getItem('hollowEchoSuggestReminder') !== '1') {
+                return;
+            }
+            sessionStorage.removeItem('hollowEchoSuggestReminder');
+            var banner = document.getElementById('echoReminderBanner');
+            if (!banner) {
+                return;
+            }
+            banner.classList.remove('hidden');
+            var dismiss = document.getElementById('echoReminderDismissBtn');
+            var openBtn = document.getElementById('echoReminderOpenBtn');
+            function closeBanner() {
+                banner.classList.add('hidden');
+            }
+            if (dismiss) {
+                dismiss.addEventListener('click', closeBanner);
+            }
+            if (openBtn) {
+                openBtn.addEventListener('click', function () {
+                    var modal = document.getElementById('reminderModal');
+                    var sun = nextSundayIso();
+                    document.getElementById('rmTitle').value = '周日回顾 · 时光回响';
+                    document.getElementById('rmNote').value = '翻一翻曾写给自己的话，温柔地待一会儿。';
+                    document.getElementById('rmDate').value = sun;
+                    document.getElementById('rmTime').value = '20:00';
+                    document.getElementById('rmIcon').value = 'auto_awesome';
+                    document.getElementById('rmFormError').classList.add('hidden');
+                    if (modal) {
+                        modal.classList.remove('hidden');
+                        modal.classList.add('flex');
+                    }
+                    closeBanner();
+                });
+            }
+        } catch (e) { /* ignore */ }
+    })();
+
+    var t = todayIso().split('-');
+    viewYear = parseInt(t[0], 10);
+    viewMonth = parseInt(t[1], 10);
+    selectedDate = todayIso();
+    loadMonth();
+    loadDay();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="coreDeps()">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;family=Be+Vietnam+Pro:wght@300;400;500;600&amp;display=swap"
+          rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+          rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "secondary": "#566953",
+                        "secondary-fixed-dim": "#d3e9cc",
+                        "on-primary-container": "#632b2d",
+                        "error": "#b23d21",
+                        "on-tertiary-fixed": "#4d493f",
+                        "error-dim": "#821a01",
+                        "secondary-fixed": "#e1f7da",
+                        "primary-fixed-dim": "#ee9e9e",
+                        "on-tertiary-fixed-variant": "#6b665a",
+                        "surface-container-low": "#fcf9f3",
+                        "secondary-dim": "#4a5d47",
+                        "outline": "#818178",
+                        "primary-container": "#fdabab",
+                        "on-error-container": "#671200",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed-variant": "#6e3435",
+                        "inverse-on-surface": "#9e9d98",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed": "#fbf3e4",
+                        "surface-container": "#f6f4ec",
+                        "on-background": "#373831",
+                        "inverse-primary": "#fdabab",
+                        "surface-container-lowest": "#ffffff",
+                        "surface": "#fffcf7",
+                        "surface-tint": "#935252",
+                        "on-secondary-container": "#4c5f49",
+                        "error-container": "#fa7150",
+                        "surface-container-high": "#f0eee5",
+                        "on-secondary-fixed": "#3a4d38",
+                        "surface-bright": "#fffcf7",
+                        "secondary-container": "#e1f7da",
+                        "on-tertiary-container": "#605b50",
+                        "on-surface": "#373831",
+                        "background": "#fffcf7",
+                        "primary": "#935252",
+                        "tertiary-fixed-dim": "#ece5d6",
+                        "surface-container-highest": "#eae9dd",
+                        "tertiary": "#696458",
+                        "surface-variant": "#eae9dd",
+                        "on-primary-fixed": "#491719",
+                        "on-surface-variant": "#64655c",
+                        "tertiary-dim": "#5c584d",
+                        "primary-fixed": "#fdabab",
+                        "tertiary-container": "#fbf3e4",
+                        "on-primary": "#ffffff",
+                        "inverse-surface": "#0e0e0c",
+                        "surface-dim": "#e3e3d6",
+                        "outline-variant": "#babaaf",
+                        "on-tertiary": "#ffffff",
+                        "primary-dim": "#854647",
+                        "on-secondary-fixed-variant": "#566953"
+                    },
+                    fontFamily: {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Be Vietnam Pro"],
+                        "label": ["Be Vietnam Pro"]
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+    <style>
+        html {
+            overflow-x: hidden;
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+        img, video { max-width: 100%; height: auto; }
+        /* 手机端：减少误触高亮、侧栏横向滚动隐藏滚动条 */
+        .mobile-nav-scroll {
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .mobile-nav-scroll::-webkit-scrollbar { display: none; }
+    </style>
+    <script src="/js/hollow-nav-trail.js"></script>
+    <script defer src="/js/image-fallback.js"></script>
+    <script defer src="/js/future-letter-gate.js"></script>
+</th:block>
+</body>
+</html>

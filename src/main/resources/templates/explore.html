@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html class="light" lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5"/>
+    <title>探索 - 挚友专属・治愈树洞备忘录</title>
+    <th:block th:replace="~{fragments/common-head :: coreDeps()}"></th:block>
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            min-height: 100dvh;
+            width: 100%;
+            max-width: 100vw;
+            overflow-x: hidden;
+            overflow-y: auto;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #fffcf7;
+            color: #373831;
+        }
+        .font-headline { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+        .explore-hide-scrollbar::-webkit-scrollbar { display: none; }
+        .explore-hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        @media (hover: none) and (pointer: coarse) {
+            .explore-wallpaper-cta { opacity: 1 !important; }
+        }
+        .explore-inline-pad {
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+        }
+        @media (min-width: 640px) {
+            .explore-inline-pad { padding-left: 1rem; padding-right: 1rem; }
+        }
+        @media (min-width: 1024px) {
+            .explore-inline-pad { padding-left: 1.25rem; padding-right: 1.25rem; }
+        }
+        @media (min-width: 1280px) {
+            .explore-inline-pad { padding-left: 1.5rem; padding-right: 1.5rem; }
+        }
+        /* 每日灵感：全宽白雾遮罩（不依赖 Tailwind 对 theme 色透明度的解析） */
+        .explore-hero-mist {
+            background: linear-gradient(
+                90deg,
+                rgba(255, 252, 247, 0.94) 0%,
+                rgba(255, 252, 247, 0.78) 28%,
+                rgba(255, 252, 247, 0.35) 52%,
+                rgba(255, 252, 247, 0) 72%
+            );
+        }
+        @media (min-width: 640px) {
+            .explore-hero-mist {
+                background: linear-gradient(
+                    90deg,
+                    rgba(255, 252, 247, 0.92) 0%,
+                    rgba(255, 252, 247, 0.65) 38%,
+                    rgba(255, 252, 247, 0.22) 58%,
+                    rgba(255, 252, 247, 0) 78%
+                );
+            }
+        }
+        .explore-hero-banner {
+            min-height: clamp(220px, 52vw, 520px);
+        }
+        @media (min-width: 640px) {
+            .explore-hero-banner { min-height: clamp(260px, 42vw, 540px); }
+        }
+        @media (min-width: 1024px) {
+            .explore-hero-banner { min-height: clamp(300px, 36vw, 560px); }
+        }
+        /* 互助社区 / 疗愈壁纸：无缝循环，从右向左（轨道左移） */
+        .explore-marquee-viewport {
+            overflow: hidden;
+            -webkit-mask-image: linear-gradient(90deg, transparent, #000 0.75rem, #000 calc(100% - 0.75rem), transparent);
+            mask-image: linear-gradient(90deg, transparent, #000 0.75rem, #000 calc(100% - 0.75rem), transparent);
+        }
+        .explore-marquee-track {
+            display: flex;
+            flex-direction: row;
+            width: max-content;
+            align-items: stretch;
+            will-change: transform;
+        }
+        .explore-marquee-chunk {
+            display: flex;
+            flex-direction: row;
+            flex-shrink: 0;
+            align-items: stretch;
+        }
+        .explore-marquee-track--community {
+            animation: explore-marquee-step 38s linear infinite;
+        }
+        .explore-marquee-track--wall {
+            animation: explore-marquee-step 46s linear infinite;
+        }
+        .explore-marquee-viewport:hover .explore-marquee-track {
+            animation-play-state: paused;
+        }
+        @keyframes explore-marquee-step {
+            from { transform: translate3d(0, 0, 0); }
+            to { transform: translate3d(var(--explore-marquee-dx, -50%), 0, 0); }
+        }
+        .explore-marquee-item-community {
+            flex: 0 0 min(17rem, 86vw);
+        }
+        @media (min-width: 640px) {
+            .explore-marquee-item-community { flex: 0 0 17rem; }
+        }
+        .explore-marquee-item-wall {
+            flex: 0 0 min(9.5rem, 44vw);
+        }
+        @media (min-width: 640px) {
+            .explore-marquee-item-wall { flex: 0 0 11rem; }
+        }
+        @media (min-width: 1024px) {
+            .explore-marquee-item-wall { flex: 0 0 13.25rem; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .explore-marquee-track--community,
+            .explore-marquee-track--wall {
+                animation: none;
+            }
+            .explore-marquee-viewport {
+                overflow-x: auto;
+                -webkit-mask-image: none;
+                mask-image: none;
+            }
+            .explore-marquee-viewport.explore-hide-scrollbar {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+            .explore-marquee-viewport.explore-hide-scrollbar::-webkit-scrollbar { display: none; }
+        }
+    </style>
+</head>
+<body class="flex min-h-screen w-full max-w-full flex-col overflow-x-hidden bg-background font-body text-on-surface selection:bg-primary-fixed selection:text-on-primary-container lg:flex-row">
+<nav th:replace="~{fragments/layout :: sidebar('explore')}"></nav>
+
+<main class="relative flex min-h-screen min-w-0 w-full flex-1 flex-col overflow-y-auto bg-surface lg:ml-72">
+    <header th:replace="~{fragments/layout :: topbar(activeTopNav='explore')}"></header>
+
+    <!-- 探索页：首图与社区/壁纸同宽；社区与壁纸横向无缝循环滚动 -->
+    <section class="flex min-h-0 w-full flex-col py-8 lg:py-12">
+        <div class="flex w-full max-w-none flex-col gap-12 lg:gap-16">
+
+            <!-- 每日灵感：标题与横幅与下方社区/壁纸同宽（explore-inline-pad） -->
+            <section class="flex flex-col gap-5 sm:gap-6">
+                <h2 class="explore-inline-pad font-headline text-2xl font-bold leading-tight tracking-tight text-on-surface sm:text-3xl md:text-4xl">每日灵感 <span class="text-on-surface-variant text-lg font-normal sm:text-xl md:text-2xl">Daily Inspiration</span></h2>
+                <div class="explore-inline-pad">
+                    <div class="explore-hero-banner relative flex w-full items-stretch overflow-hidden shadow-[0_8px_32px_rgba(55,56,49,0.08)] sm:rounded-2xl">
+                        <div class="pointer-events-none absolute inset-0 bg-cover bg-center"
+                             style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDSq_W-3UAEF_vx7ikWVXTJ1beTmDrVSsBrz2ZCVJ0gVi-6dFzXKJ-bXXy491qd7Brsslo7wUKXd4Z0RVoKHeHhtoBr1YtaS0pSJc3Iz3V96jRq0J5_oce3DUBSZUXZMTY25wxnV94Y2NL6_xIVsewzH_C7J3exjCf44I75o56Sp8MVeiZinFioXhKqGeFdpJgxOOlPWHyQK3hyg91Fu4BNHShbbqiGVNwImjhonx9chEAjtOcYbO-YNwdS6HmcUuZjMfIcSKACpaY');"></div>
+                        <div class="explore-hero-mist pointer-events-none absolute inset-0 z-[1]" aria-hidden="true"></div>
+                        <div class="relative z-[2] flex w-full flex-col justify-center py-10 pl-6 pr-4 sm:w-[55%] sm:py-12 sm:pl-10 sm:pr-8 lg:w-[48%] lg:pl-14 lg:pr-12">
+                            <h3 class="mb-3 font-headline text-2xl font-bold text-on-surface sm:text-3xl lg:text-4xl">晨光洗涤 <span class="text-on-surface-variant text-lg font-medium sm:text-xl">Morning Light</span></h3>
+                            <p id="exploreEchoInspiration" class="mb-3 hidden max-w-xl border-l-2 border-primary/35 pl-3 text-sm italic leading-relaxed text-primary/90 sm:text-base" role="status"></p>
+                            <p id="exploreHeroInspirationLine" class="mb-6 max-w-xl text-base leading-relaxed text-on-surface-variant sm:text-lg lg:text-xl">让温柔的晨光洗去昨日的忧伤，<br class="hidden sm:block"/>今天又是全新绽放的时刻。</p>
+                            <div class="flex flex-wrap items-center gap-3">
+                                <button type="button" id="exploreReadMoreBtn"
+                                        class="rounded-full border border-outline-variant/15 bg-surface-container-lowest px-6 py-2.5 text-base font-semibold text-primary shadow-sm transition-colors hover:bg-primary-container/25 sm:px-8 sm:py-3">
+                                    阅读更多
+                                </button>
+                                <button type="button" id="exploreFavoriteBtn"
+                                        class="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-5 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-primary-container/30 sm:text-base">
+                                    <span class="material-symbols-outlined text-[1.25rem]">bookmark_add</span>
+                                    收藏灵感
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 互助社区：自动横向循环 -->
+            <section class="explore-inline-pad flex flex-col gap-6 sm:gap-8">
+                <div class="flex flex-wrap items-end justify-between gap-4">
+                    <h2 class="font-headline text-2xl font-bold leading-tight tracking-tight text-on-surface sm:text-3xl md:text-4xl">互助社区 <span class="text-on-surface-variant text-lg font-normal sm:text-xl md:text-2xl">Support Community</span></h2>
+                    <a href="#" class="inline-flex items-center gap-1 text-base font-semibold text-primary transition-colors hover:text-primary-dim sm:text-lg" onclick="return false;">查看全部 <span class="material-symbols-outlined text-lg sm:text-xl">arrow_forward</span></a>
+                </div>
+                <div id="exploreCommunityViewport" class="explore-marquee-viewport explore-hide-scrollbar" data-explore-marquee="" role="region" aria-label="互助社区滚动展示">
+                    <div class="explore-marquee-track explore-marquee-track--community gap-5 lg:gap-6">
+                        <div class="explore-marquee-chunk explore-community-chunk gap-5 lg:gap-6">
+                            <article data-explore-post-id="c-seed-1" class="explore-marquee-item-community flex min-h-[220px] flex-col gap-4 rounded-xl border border-outline-variant/10 bg-surface-container-lowest p-5 shadow-[0_2px_16px_rgba(55,56,49,0.04)] sm:min-h-0 sm:p-6">
+                                <p class="flex-1 text-base italic leading-relaxed text-on-surface sm:text-lg">「慢慢来，允许自己有低落的日子。我们在云端拥抱你。」</p>
+                                <div class="mt-auto flex items-center gap-3 border-t border-surface-variant pt-4">
+                                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary-container text-sm font-bold text-on-secondary-container">A</div>
+                                    <div class="min-w-0 flex flex-col">
+                                        <span class="text-sm font-semibold text-on-surface">匿名飞鸟</span>
+                                        <span class="text-xs text-on-surface-variant">2 小时前</span>
+                                    </div>
+                                    <button type="button" class="explore-like ml-auto inline-flex items-center gap-1 text-on-surface-variant transition-colors hover:text-primary" aria-label="点赞" aria-pressed="false">
+                                        <span class="material-symbols-outlined text-lg">favorite</span>
+                                        <span class="explore-like-count text-xs font-semibold tabular-nums">0</span>
+                                    </button>
+                                </div>
+                            </article>
+                            <article data-explore-post-id="c-seed-2" class="explore-marquee-item-community flex min-h-[220px] flex-col gap-4 rounded-xl border border-outline-variant/10 bg-surface-container-lowest p-5 shadow-[0_2px_16px_rgba(55,56,49,0.04)] sm:min-h-0 sm:p-6">
+                                <p class="flex-1 text-base italic leading-relaxed text-on-surface sm:text-lg">「今天的焦虑好像少了一点点，虽然只有一点点，但也值得庆祝。」</p>
+                                <div class="mt-auto flex items-center gap-3 border-t border-surface-variant pt-4">
+                                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-tertiary-container text-sm font-bold text-on-tertiary-container">M</div>
+                                    <div class="min-w-0 flex flex-col">
+                                        <span class="text-sm font-semibold text-on-surface">寻找微光</span>
+                                        <span class="text-xs text-on-surface-variant">5 小时前</span>
+                                    </div>
+                                    <button type="button" class="explore-like ml-auto inline-flex items-center gap-1 text-on-surface-variant transition-colors hover:text-primary" aria-label="点赞" aria-pressed="false">
+                                        <span class="material-symbols-outlined text-lg">favorite</span>
+                                        <span class="explore-like-count text-xs font-semibold tabular-nums">0</span>
+                                    </button>
+                                </div>
+                            </article>
+                            <article data-explore-post-id="c-seed-3" class="explore-marquee-item-community flex min-h-[220px] flex-col gap-4 rounded-xl border border-outline-variant/10 bg-surface-container-lowest p-5 shadow-[0_2px_16px_rgba(55,56,49,0.04)] sm:min-h-0 sm:p-6">
+                                <p class="flex-1 text-base italic leading-relaxed text-on-surface sm:text-lg">「看到大家的留言，觉得不是一个人在战斗。谢谢你们的存在。」</p>
+                                <div class="mt-auto flex items-center gap-3 border-t border-surface-variant pt-4">
+                                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-container/50 text-sm font-bold text-on-primary-container">S</div>
+                                    <div class="min-w-0 flex flex-col">
+                                        <span class="text-sm font-semibold text-on-surface">星空守望</span>
+                                        <span class="text-xs text-on-surface-variant">昨天</span>
+                                    </div>
+                                    <button type="button" class="explore-like ml-auto inline-flex items-center gap-1 text-on-surface-variant transition-colors hover:text-primary" aria-label="点赞" aria-pressed="false">
+                                        <span class="material-symbols-outlined text-lg">favorite</span>
+                                        <span class="explore-like-count text-xs font-semibold tabular-nums">0</span>
+                                    </button>
+                                </div>
+                            </article>
+                            <article data-explore-post-id="c-seed-4" class="explore-marquee-item-community flex min-h-[220px] flex-col gap-4 rounded-xl border border-outline-variant/10 bg-surface-container-lowest p-5 shadow-[0_2px_16px_rgba(55,56,49,0.04)] sm:min-h-0 sm:p-6">
+                                <p class="flex-1 text-base italic leading-relaxed text-on-surface sm:text-lg">「把心事折成纸飞机吧，风会带走一点重量，留下轻盈的你。」</p>
+                                <div class="mt-auto flex items-center gap-3 border-t border-surface-variant pt-4">
+                                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary-fixed text-sm font-bold text-secondary">L</div>
+                                    <div class="min-w-0 flex flex-col">
+                                        <span class="text-sm font-semibold text-on-surface">晚风信笺</span>
+                                        <span class="text-xs text-on-surface-variant">3 天前</span>
+                                    </div>
+                                    <button type="button" class="explore-like ml-auto inline-flex items-center gap-1 text-on-surface-variant transition-colors hover:text-primary" aria-label="点赞" aria-pressed="false">
+                                        <span class="material-symbols-outlined text-lg">favorite</span>
+                                        <span class="explore-like-count text-xs font-semibold tabular-nums">0</span>
+                                    </button>
+                                </div>
+                            </article>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 rounded-2xl border border-primary/20 bg-surface-container-lowest/90 p-5 shadow-sm sm:p-6">
+                    <h3 class="font-headline text-lg font-bold text-on-surface">给陌生人留一句温暖</h3>
+                    <p class="mt-1 text-sm text-on-surface-variant">匿名展示在互助社区，并有机会被「给我惊喜」寄给另一位访客。</p>
+                    <textarea id="exploreStrangerInput" rows="3" maxlength="400" placeholder="例如：今天也请为自己骄傲一下。"
+                              class="mt-3 w-full rounded-xl border border-outline-variant/40 bg-white px-4 py-3 text-sm text-on-surface resize-none focus:ring-2 focus:ring-primary/25"></textarea>
+                    <div class="mt-3 flex flex-wrap items-center gap-3">
+                        <button type="button" id="exploreStrangerSubmit" class="rounded-full bg-gradient-to-br from-primary to-primary-container px-6 py-2.5 text-sm font-semibold text-white shadow-sm">投递温暖</button>
+                        <p id="exploreStrangerHint" class="hidden text-sm font-medium text-secondary"></p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 疗愈壁纸：自动横向循环 -->
+            <section class="explore-inline-pad flex flex-col gap-6 sm:gap-8 pb-8">
+                <div class="flex flex-wrap items-end justify-between gap-4">
+                    <h2 class="font-headline text-2xl font-bold leading-tight tracking-tight text-on-surface sm:text-3xl md:text-4xl">疗愈壁纸 <span class="text-on-surface-variant text-lg font-normal sm:text-xl md:text-2xl">Healing Wallpapers</span></h2>
+                    <a href="#" class="inline-flex items-center gap-1 text-base font-semibold text-primary transition-colors hover:text-primary-dim sm:text-lg" onclick="return false;">全部图库 <span class="material-symbols-outlined text-lg sm:text-xl">arrow_forward</span></a>
+                </div>
+                <div class="explore-marquee-viewport explore-hide-scrollbar" data-explore-marquee="" role="region" aria-label="疗愈壁纸滚动展示">
+                    <div class="explore-marquee-track explore-marquee-track--wall gap-4 sm:gap-5 lg:gap-6">
+                        <div class="explore-marquee-chunk gap-4 sm:gap-5 lg:gap-6">
+                            <div class="explore-marquee-item-wall group relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-surface-container">
+                                <div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+                                     style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCnZDUpTdn7LRo_v-Tebi9PNSTVvbQ8ZYEdhuCKgMn6siQ-uU92ir-fGWO9JPuVvmZ1AvnGn-HBrksjhWL2gVzMfisXnBRGNJXIfYdv-X-MCXLmhV2DhpUgS9X4i-bGF7HLgZfCJg2SGqfMgnV47ww2_a3XXZTk6mKqyrAcI0BObHf_raDk_7C2st249WnPxclcKduSuqLLVAJmMkaDUiMoLLX9DOenjvlt_e_PI90QdhGJcG0zZIz9Eyw---2AYRojPWZizOA6Bp4');"></div>
+                                <div class="explore-wallpaper-cta absolute inset-0 flex items-end bg-gradient-to-t from-inverse-surface/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 sm:p-4">
+                                    <a class="flex w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest/90 py-2.5 text-base font-semibold text-on-surface backdrop-blur-sm transition-colors hover:bg-primary-container hover:text-on-primary-container sm:py-3"
+                                       href="https://lh3.googleusercontent.com/aida-public/AB6AXuCnZDUpTdn7LRo_v-Tebi9PNSTVvbQ8ZYEdhuCKgMn6siQ-uU92ir-fGWO9JPuVvmZ1AvnGn-HBrksjhWL2gVzMfisXnBRGNJXIfYdv-X-MCXLmhV2DhpUgS9X4i-bGF7HLgZfCJg2SGqfMgnV47ww2_a3XXZTk6mKqyrAcI0BObHf_raDk_7C2st249WnPxclcKduSuqLLVAJmMkaDUiMoLLX9DOenjvlt_e_PI90QdhGJcG0zZIz9Eyw---2AYRojPWZizOA6Bp4"
+                                       target="_blank" rel="noopener noreferrer" download>
+                                        <span class="material-symbols-outlined text-lg">download</span>
+                                        下载
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="explore-marquee-item-wall group relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-surface-container">
+                                <div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+                                     style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDo7BeaqqZrVsVdHlPfkIrJuuojDujCpRdzRgQY_bd1nOWjHIWhi9rAwKmoStQjLHF0L2X82z3kFxIkAKQes3LsNI8T8ZylViUMmED8RqXftI_jyx4Qc29YsLzxvfO8XZCKrILE3aGuM-Zvj3RimYjV423jp8DCCovelTdsTRFvpASnkyfdcuI8WT3bfJbY6RnGohaWSISw5JpfUehl5ayA6oKYde_L70_NVg9GMs_XTA-uNbuIpFgHoAo-MhF0CtPEPXFi_CAFeEg');"></div>
+                                <div class="explore-wallpaper-cta absolute inset-0 flex items-end bg-gradient-to-t from-inverse-surface/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 sm:p-4">
+                                    <a class="flex w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest/90 py-2.5 text-base font-semibold text-on-surface backdrop-blur-sm transition-colors hover:bg-primary-container hover:text-on-primary-container sm:py-3"
+                                       href="https://lh3.googleusercontent.com/aida-public/AB6AXuDo7BeaqqZrVsVdHlPfkIrJuuojDujCpRdzRgQY_bd1nOWjHIWhi9rAwKmoStQjLHF0L2X82z3kFxIkAKQes3LsNI8T8ZylViUMmED8RqXftI_jyx4Qc29YsLzxvfO8XZCKrILE3aGuM-Zvj3RimYjV423jp8DCCovelTdsTRFvpASnkyfdcuI8WT3bfJbY6RnGohaWSISw5JpfUehl5ayA6oKYde_L70_NVg9GMs_XTA-uNbuIpFgHoAo-MhF0CtPEPXFi_CAFeEg"
+                                       target="_blank" rel="noopener noreferrer" download>
+                                        <span class="material-symbols-outlined text-lg">download</span>
+                                        下载
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="explore-marquee-item-wall group relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-surface-container">
+                                <div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+                                     style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD4H7RENiJ5dGIknXpLmdSyJcIf_XxS7wcwrB_1ae8SD1sluHvE-FkLgO9w4nkz54b4k5-VsTy_famifu24ktY5RBFfu25143lnon-py9M7zEtEBFrU0WAF8KYPkbgV449gRS1IulI9eyPd7GGjR2P9BDZQr5UltySUhY-xs0E9nra9jlKkB2Addbw7jffGvy31JHE84jzrLub6v1w8aer04cMfYeRBGGMW0JbGBxVSNk2G_y3xdN8R0DMbEU4NLzBPDq7B32UPYQo');"></div>
+                                <div class="explore-wallpaper-cta absolute inset-0 flex items-end bg-gradient-to-t from-inverse-surface/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 sm:p-4">
+                                    <a class="flex w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest/90 py-2.5 text-base font-semibold text-on-surface backdrop-blur-sm transition-colors hover:bg-primary-container hover:text-on-primary-container sm:py-3"
+                                       href="https://lh3.googleusercontent.com/aida-public/AB6AXuD4H7RENiJ5dGIknXpLmdSyJcIf_XxS7wcwrB_1ae8SD1sluHvE-FkLgO9w4nkz54b4k5-VsTy_famifu24ktY5RBFfu25143lnon-py9M7zEtEBFrU0WAF8KYPkbgV449gRS1IulI9eyPd7GGjR2P9BDZQr5UltySUhY-xs0E9nra9jlKkB2Addbw7jffGvy31JHE84jzrLub6v1w8aer04cMfYeRBGGMW0JbGBxVSNk2G_y3xdN8R0DMbEU4NLzBPDq7B32UPYQo"
+                                       target="_blank" rel="noopener noreferrer" download>
+                                        <span class="material-symbols-outlined text-lg">download</span>
+                                        下载
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="explore-marquee-item-wall group relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-surface-container">
+                                <div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+                                     style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAsCV0ff_FI2wGsKGUo5crmvkzp7_nY_Ef3q7bcY0gBHKgJstYYw2KaPox0Y4nac8eEodK5XWn2KiYI6sWSHribopV3G23SrQ8P67MHdfehNmje_ghyO8e4r44-1kW6oEOpIG_CD7VMT2DNUeAvNKjzCr2w7K6j_QZvd8i3XZkiopSZGi2i1OVguAqeLcJpotcvycC9AyW1w_NL2GT93qaE_S8zeyszU9nPOY2HWCH3JN-Ul91M7fS70y7x_Kq6jiaDkCxbiMBV3mA');"></div>
+                                <div class="explore-wallpaper-cta absolute inset-0 flex items-end bg-gradient-to-t from-inverse-surface/60 via-transparent to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 sm:p-4">
+                                    <a class="flex w-full items-center justify-center gap-2 rounded-full bg-surface-container-lowest/90 py-2.5 text-base font-semibold text-on-surface backdrop-blur-sm transition-colors hover:bg-primary-container hover:text-on-primary-container sm:py-3"
+                                       href="https://lh3.googleusercontent.com/aida-public/AB6AXuAsCV0ff_FI2wGsKGUo5crmvkzp7_nY_Ef3q7bcY0gBHKgJstYYw2KaPox0Y4nac8eEodK5XWn2KiYI6sWSHribopV3G23SrQ8P67MHdfehNmje_ghyO8e4r44-1kW6oEOpIG_CD7VMT2DNUeAvNKjzCr2w7K6j_QZvd8i3XZkiopSZGi2i1OVguAqeLcJpotcvycC9AyW1w_NL2GT93qaE_S8zeyszU9nPOY2HWCH3JN-Ul91M7fS70y7x_Kq6jiaDkCxbiMBV3mA"
+                                       target="_blank" rel="noopener noreferrer" download>
+                                        <span class="material-symbols-outlined text-lg">download</span>
+                                        下载
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </section>
+</main>
+
+<script th:src="@{/js/hollow-time-echo.js}"></script>
+<script th:src="@{/js/hollow-explore-bonds.js}"></script>
+<script>
+    (function () {
+        function getHeroInspirationPlain() {
+            var el = document.getElementById('exploreHeroInspirationLine');
+            if (!el) {
+                return '';
+            }
+            return el.innerText.replace(/\s+/g, ' ').trim();
+        }
+        function armHomeFromHero() {
+            if (!window.HollowExploreBonds) {
+                return;
+            }
+            var line = getHeroInspirationPlain();
+            if (line) {
+                HollowExploreBonds.armHomeGreeting(line);
+            }
+        }
+        function hydrateExploreEcho() {
+            var el = document.getElementById('exploreEchoInspiration');
+            if (!el) {
+                return;
+            }
+            if (window.HollowExploreBonds) {
+                var g = HollowExploreBonds.pickRandomGalleryLine();
+                if (g) {
+                    el.textContent = '今日灵感备选 · ' + g;
+                    el.classList.remove('hidden');
+                    return;
+                }
+            }
+            if (window.HollowTimeEcho && HollowTimeEcho.count() >= 1) {
+                var e = HollowTimeEcho.getRandom();
+                if (e && e.text) {
+                    el.textContent = '心声摘录 · ' + e.text;
+                    el.classList.remove('hidden');
+                }
+            }
+        }
+        function syncCommunityLikeCounts() {
+            if (!window.HollowExploreBonds) {
+                return;
+            }
+            document.querySelectorAll('[data-explore-post-id]').forEach(function (art) {
+                var id = art.getAttribute('data-explore-post-id');
+                var p = HollowExploreBonds.getPostById(id);
+                var n = p ? p.likes : 0;
+                art.querySelectorAll('.explore-like-count').forEach(function (sp) {
+                    sp.textContent = String(n);
+                });
+            });
+        }
+        function bindCommunityLikeDelegation() {
+            var vp = document.getElementById('exploreCommunityViewport');
+            if (!vp || !window.HollowExploreBonds) {
+                return;
+            }
+            vp.addEventListener('click', function (ev) {
+                var btn = ev.target.closest('.explore-like');
+                if (!btn) {
+                    return;
+                }
+                ev.preventDefault();
+                var art = btn.closest('[data-explore-post-id]');
+                if (!art) {
+                    return;
+                }
+                var pid = art.getAttribute('data-explore-post-id');
+                var nl = HollowExploreBonds.likePost(pid);
+                if (nl == null) {
+                    return;
+                }
+                syncCommunityLikeCounts();
+                btn.setAttribute('aria-pressed', 'true');
+                var icon = btn.querySelector('.material-symbols-outlined');
+                if (icon) {
+                    icon.style.fontVariationSettings = "'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24";
+                }
+                btn.classList.add('text-primary');
+            });
+        }
+        function bindInspirationCTA() {
+            var r = document.getElementById('exploreReadMoreBtn');
+            var f = document.getElementById('exploreFavoriteBtn');
+            if (r) {
+                r.addEventListener('click', armHomeFromHero);
+            }
+            if (f) {
+                f.addEventListener('click', armHomeFromHero);
+            }
+        }
+        function bindStrangerWall() {
+            var btn = document.getElementById('exploreStrangerSubmit');
+            var input = document.getElementById('exploreStrangerInput');
+            var hint = document.getElementById('exploreStrangerHint');
+            if (!btn || !input || !window.HollowExploreBonds) {
+                return;
+            }
+            btn.addEventListener('click', function () {
+                var t = input.value.trim();
+                if (!t) {
+                    return;
+                }
+                HollowExploreBonds.addCommunityPost(t, '匿名旅人');
+                HollowExploreBonds.addStrangerLetter(t);
+                HollowExploreBonds.addGalleryLine(t);
+                input.value = '';
+                if (hint) {
+                    hint.textContent = '这份温暖已存入惊喜盲盒，并流入互助社区～';
+                    hint.classList.remove('hidden');
+                    window.setTimeout(function () {
+                        hint.classList.add('hidden');
+                    }, 5500);
+                }
+                syncCommunityLikeCounts();
+            });
+        }
+        function cloneExploreMarquees() {
+            document.querySelectorAll('[data-explore-marquee]').forEach(function (vp) {
+                var track = vp.querySelector('.explore-marquee-track');
+                if (!track) {
+                    return;
+                }
+                var chunks = track.querySelectorAll('.explore-marquee-chunk');
+                if (chunks.length !== 1) {
+                    return;
+                }
+                var copy = chunks[0].cloneNode(true);
+                copy.setAttribute('aria-hidden', 'true');
+                track.appendChild(copy);
+            });
+        }
+        function applyExploreMarqueeSteps() {
+            document.querySelectorAll('[data-explore-marquee]').forEach(function (vp) {
+                var track = vp.querySelector('.explore-marquee-track');
+                if (!track) {
+                    return;
+                }
+                var chunks = track.querySelectorAll('.explore-marquee-chunk');
+                if (chunks.length < 2) {
+                    return;
+                }
+                var first = chunks[0];
+                var cs = window.getComputedStyle(track);
+                var gapPx = parseFloat(cs.gap || cs.columnGap || '0');
+                if (isNaN(gapPx)) {
+                    gapPx = 0;
+                }
+                var step = first.offsetWidth + gapPx;
+                if (step <= 1) {
+                    return;
+                }
+                track.style.animation = 'none';
+                track.offsetHeight;
+                track.style.setProperty('--explore-marquee-dx', (-step).toFixed(2) + 'px');
+                track.style.animation = '';
+            });
+        }
+        var _marqueeResizeTimer;
+        function scheduleMarqueeSteps() {
+            clearTimeout(_marqueeResizeTimer);
+            _marqueeResizeTimer = setTimeout(function () {
+                applyExploreMarqueeSteps();
+            }, 80);
+        }
+        function init() {
+            if (window.HollowExploreBonds) {
+                HollowExploreBonds.syncCheerTopThree();
+            }
+            hydrateExploreEcho();
+            syncCommunityLikeCounts();
+            cloneExploreMarquees();
+            syncCommunityLikeCounts();
+            bindCommunityLikeDelegation();
+            bindInspirationCTA();
+            bindStrangerWall();
+            requestAnimationFrame(function () {
+                requestAnimationFrame(applyExploreMarqueeSteps);
+            });
+            document.querySelectorAll('[data-explore-marquee]').forEach(function (vp) {
+                if (typeof ResizeObserver !== 'undefined') {
+                    var ro = new ResizeObserver(scheduleMarqueeSteps);
+                    ro.observe(vp);
+                }
+            });
+            window.addEventListener('resize', scheduleMarqueeSteps);
+            window.addEventListener('load', applyExploreMarqueeSteps);
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    })();
+</script>
+</body>
+</html>

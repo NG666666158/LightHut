@@ -1,0 +1,21 @@
+# 本地密钥（Docker Compose）
+.env
+
+# 构建与本地数据
+target/
+**/target/
+data/
+uploads/
+
+# 本地打包分发物（体积大，勿提交）
+dist-client/
+
+# 前端依赖与构建（若存在）
+web/node_modules/
+web/dist/
+
+# IDE / 系统
+.idea/
+*.iml
+.DS_Store
+Thumbs.db

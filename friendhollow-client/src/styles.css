@@ -1,0 +1,84 @@
+:root {
+  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #373831;
+  background-color: #fffcf7;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+.container {
+  margin: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#boot-panel {
+  max-width: 760px;
+  text-align: center;
+}
+
+#app-panel {
+  width: 100%;
+  height: 100%;
+}
+
+#app-frame {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+#status {
+  color: #64655c;
+  font-size: 15px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.hidden {
+  display: none;
+}
+
+h1 {
+  font-size: 30px;
+  margin-bottom: 0;
+}
+
+button {
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  padding: 0.65em 1.4em;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  background-color: #ffffff;
+  background-image: linear-gradient(45deg, #935252, #fdabab);
+  transition: transform 0.2s ease;
+  box-shadow: 0 8px 16px rgba(147, 82, 82, 0.2);
+}
+
+button {
+  cursor: pointer;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+button:active {
+  transform: scale(0.98);
+}

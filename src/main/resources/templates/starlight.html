@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html class="light" lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5"/>
+    <title>友谊星光墙 - Luminous Sanctuary</title>
+
+    <th:block th:replace="~{fragments/common-head :: coreDeps()}"></th:block>
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            min-height: 100dvh;
+            width: 100%;
+            max-width: 100vw;
+            overflow-x: hidden;
+            overflow-y: auto;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #fffcf7;
+            color: #373831;
+        }
+
+        .font-headline { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="flex min-h-screen w-full max-w-full flex-col overflow-x-hidden bg-background text-on-surface selection:bg-primary-container selection:text-on-primary-container lg:flex-row">
+    <nav th:replace="~{fragments/layout :: sidebar('starlight')}"></nav>
+
+    <!-- 主内容区 -->
+    <main class="relative flex min-h-screen min-w-0 w-full flex-1 flex-col overflow-y-auto bg-surface lg:ml-72">
+        <header th:replace="~{fragments/layout :: topbar(activeTopNav='none')}"></header>
+
+        <!-- 星光墙主体 -->
+        <div class="w-full space-y-8 px-4 py-8 sm:px-8 lg:space-y-10 lg:px-12 xl:px-20 lg:py-12">
+            <section class="flex w-full flex-col items-stretch justify-between gap-4 sm:flex-row sm:items-center sm:gap-8">
+                <div class="min-w-0 flex-1 space-y-4">
+                    <h2 class="text-3xl font-extrabold font-headline leading-tight tracking-tight text-on-surface sm:text-4xl md:text-5xl lg:text-6xl">友谊星光墙</h2>
+                    <div class="flex items-center space-x-4">
+                        <div class="h-[1px] w-12 shrink-0 bg-primary/30"></div>
+                        <p class="text-base font-body font-medium italic text-secondary-dim sm:text-lg md:text-xl">在这里，定格与好友共享的每一个温柔时刻。</p>
+                    </div>
+                </div>
+                <button type="button" id="openUploadBtn" class="flex shrink-0 items-center gap-2 rounded-full bg-gradient-to-br from-primary to-primary-container px-6 py-3 font-headline font-semibold text-white shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-105 active:scale-95 sm:gap-3 sm:px-8 sm:py-3.5">
+                    <span class="material-symbols-outlined text-xl">cloud_upload</span>
+                    上传照片
+                </button>
+            </section>
+
+            <section class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div id="categoryTabs" class="hide-scrollbar flex gap-3 overflow-x-auto pb-2">
+                    <button type="button" data-category="ALL" class="cat-tab px-6 py-2 rounded-full bg-primary text-white font-medium text-sm transition-all shadow-md shadow-primary/10">所有回忆</button>
+                    <button type="button" data-category="TRAVEL" class="cat-tab px-6 py-2 rounded-full bg-surface-container-high text-on-surface-variant font-medium text-sm hover:bg-surface-container-highest transition-all">旅行</button>
+                    <button type="button" data-category="DAILY" class="cat-tab px-6 py-2 rounded-full bg-surface-container-high text-on-surface-variant font-medium text-sm hover:bg-surface-container-highest transition-all">日常</button>
+                    <button type="button" data-category="BIRTHDAY" class="cat-tab px-6 py-2 rounded-full bg-surface-container-high text-on-surface-variant font-medium text-sm hover:bg-surface-container-highest transition-all">庆生</button>
+                    <button type="button" data-category="SPORT" class="cat-tab px-6 py-2 rounded-full bg-surface-container-high text-on-surface-variant font-medium text-sm hover:bg-surface-container-highest transition-all">运动</button>
+                </div>
+                <div class="flex shrink-0 items-center gap-4 text-sm text-outline">
+                    <span>排序方式:</span>
+                    <button type="button" id="sortToggleBtn" class="flex items-center gap-1 font-semibold text-primary">
+                        <span id="sortLabel">最近添加</span>
+                        <span class="material-symbols-outlined text-sm">keyboard_arrow_down</span>
+                    </button>
+                </div>
+            </section>
+
+            <p id="memoryLoading" class="text-on-surface-variant text-sm hidden">加载中…</p>
+            <p id="memoryError" class="text-error text-sm hidden"></p>
+
+            <section id="memoryGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            </section>
+
+            <div class="flex justify-center mt-10 mb-2">
+                <button type="button" id="btnLoadMore" class="px-10 py-3 rounded-full border-2 border-primary/20 text-primary font-semibold hover:bg-primary/5 transition-colors flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
+                    查看更多往事
+                    <span class="material-symbols-outlined">expand_more</span>
+                </button>
+            </div>
+        </div>
+    </main>
+
+<!-- 上传表单（fixed 置于 body 下，避免被主内容 overflow 裁剪） -->
+<div id="uploadModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-6">
+    <div id="uploadModalBackdrop" class="absolute inset-0 bg-black/45"></div>
+    <div class="relative bg-surface-container-lowest rounded-2xl shadow-2xl max-w-lg w-full p-8 border border-outline-variant/30 max-h-[90vh] overflow-y-auto">
+        <h3 class="font-headline text-xl font-bold text-on-surface mb-6">上传一段新回忆</h3>
+        <form id="uploadForm" class="space-y-4">
+            <div>
+                <label class="block text-xs text-on-surface-variant mb-1">照片 <span class="text-error">*</span></label>
+                <input id="ufImage" name="image" type="file" accept="image/jpeg,image/png,image/webp,image/gif" required
+                       class="block w-full text-sm text-on-surface file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-primary/10 file:text-primary"/>
+            </div>
+            <div>
+                <label class="block text-xs text-on-surface-variant mb-1">标题 <span class="text-error">*</span></label>
+                <input id="ufTitle" name="title" type="text" required maxlength="120"
+                       class="w-full rounded-xl border-outline-variant/50 bg-white px-4 py-2 text-on-surface text-sm"/>
+            </div>
+            <div>
+                <label class="block text-xs text-on-surface-variant mb-1">分类 <span class="text-error">*</span></label>
+                <select id="ufCategory" name="category" required class="w-full rounded-xl border-outline-variant/50 bg-white px-4 py-2 text-sm text-on-surface">
+                    <option value="TRAVEL">旅行</option>
+                    <option value="DAILY" selected>日常</option>
+                    <option value="BIRTHDAY">庆生</option>
+                    <option value="SPORT">运动</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs text-on-surface-variant mb-1">拍摄日期</label>
+                <input id="ufEventDate" name="eventDate" type="date" class="w-full rounded-xl border-outline-variant/50 bg-white px-4 py-2 text-sm"/>
+            </div>
+            <div>
+                <label class="block text-xs text-on-surface-variant mb-1">同行好友（逗号分隔）</label>
+                <input id="ufCompanions" name="companions" type="text" placeholder="小雨, 阿强"
+                       class="w-full rounded-xl border-outline-variant/50 bg-white px-4 py-2 text-sm"/>
+            </div>
+            <div>
+                <label class="block text-xs text-on-surface-variant mb-1">描述（可选）</label>
+                <textarea id="ufDescription" name="description" rows="3" maxlength="2000"
+                          class="w-full rounded-xl border-outline-variant/50 bg-white px-4 py-2 text-sm text-on-surface"></textarea>
+            </div>
+            <div>
+                <label class="block text-xs text-on-surface-variant mb-1">卡片样式</label>
+                <select id="ufLayout" name="layout" class="w-full rounded-xl border-outline-variant/50 bg-white px-4 py-2 text-sm text-on-surface">
+                    <option value="COMPACT">小卡片</option>
+                    <option value="MEDIUM">图文卡</option>
+                    <option value="HERO">横版大图</option>
+                </select>
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="button" id="uploadCancelBtn" class="flex-1 py-3 rounded-full border border-outline-variant text-on-surface font-medium hover:bg-surface-container-high transition-colors">取消</button>
+                <button type="submit" id="uploadSubmitBtn" class="flex-1 py-3 rounded-full bg-gradient-to-br from-primary to-primary-container text-white font-semibold shadow-md">保存</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div id="previewModal" class="fixed inset-0 z-[120] hidden items-center justify-center p-6">
+    <div id="previewBackdrop" class="absolute inset-0 bg-black/70"></div>
+    <div class="relative w-full max-w-6xl">
+        <button type="button" id="previewCloseBtn" class="absolute -top-12 right-0 text-white/90 hover:text-white">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+        <img id="previewImage" alt="preview" class="w-full max-h-[78vh] object-contain rounded-xl bg-black/40"/>
+        <p id="previewCaption" class="text-white/90 text-sm mt-3 text-center"></p>
+    </div>
+</div>
+<script>
+(function () {
+    var API_LIST = '/api/starlight/memories';
+    var API_CREATE = '/api/starlight/memories';
+    var API_DELETE = '/api/starlight/memories/';
+    var PAGE_SIZE = 6;
+
+    var state = {
+        category: 'ALL',
+        sort: 'createdAt',
+        order: 'desc',
+        page: 0,
+        hasMore: false,
+        loading: false,
+        sortMode: 0,
+        loadedItems: [],
+        previewIndex: -1
+    };
+
+    function escapeHtml(s) {
+        if (s == null) return '';
+        return String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function formatZhDate(iso) {
+        if (!iso) return '';
+        var m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (!m) return escapeHtml(iso);
+        return m[1] + '年' + parseInt(m[2], 10) + '月' + parseInt(m[3], 10) + '日';
+    }
+
+    function companionLine(companions) {
+        if (!companions || companions.length === 0) return '';
+        return ' · 与 ' + companions.map(function (c) { return escapeHtml(c); }).join(', ');
+    }
+
+    function renderCard(item, index) {
+        var layout = item.layout || 'COMPACT';
+        var title = escapeHtml(item.title);
+        var desc = item.description ? escapeHtml(item.description) : '';
+        var dateStr = formatZhDate(item.eventDate);
+        var catBadge = escapeHtml(item.categoryLabel || '') + '回忆';
+        var comp = companionLine(item.companions);
+        var imgUrl = escapeHtml(item.imageUrl);
+        var commonCardMeta = ' data-memory-id="' + item.id + '" data-preview-index="' + index + '"';
+        var actionBar =
+            '<div class="absolute top-3 right-3 z-10">' +
+            '<button type="button" class="delete-memory-btn px-3 py-1.5 rounded-full bg-black/45 text-white text-xs hover:bg-black/60 transition" data-memory-id="' + item.id + '">删除</button>' +
+            '</div>';
+
+        if (layout === 'HERO') {
+            return '<div class="memory-card lg:col-span-2 relative group overflow-hidden rounded-xl h-[450px]"' + commonCardMeta + '>' +
+                actionBar +
+                '<img alt="" class="memory-preview-trigger w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 cursor-zoom-in" src="' + imgUrl + '"/>' +
+                '<div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>' +
+                '<div class="absolute bottom-0 left-0 p-8 text-white w-full">' +
+                '<span class="inline-block px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-medium mb-3 uppercase tracking-wider">' + catBadge + '</span>' +
+                '<h3 class="text-3xl font-bold font-headline mb-2">' + title + '</h3>' +
+                '<p class="text-white/80 text-sm">' + dateStr + comp + '</p>' +
+                '</div></div>';
+        }
+        if (layout === 'MEDIUM') {
+            return '<div class="memory-card relative group bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden h-[450px]"' + commonCardMeta + '>' +
+                actionBar +
+                '<img alt="" class="memory-preview-trigger w-full h-2/3 object-cover cursor-zoom-in" src="' + imgUrl + '"/>' +
+                '<div class="p-6">' +
+                '<h3 class="font-headline font-bold text-lg text-on-surface">' + title + '</h3>' +
+                '<p class="text-outline text-xs mt-1">' + dateStr + '</p>' +
+                (desc ? '<p class="text-sm text-on-surface-variant mt-4 leading-relaxed">' + desc + '</p>' : '') +
+                '</div></div>';
+        }
+        return '<div class="memory-card bg-surface-container-lowest p-5 rounded-lg group hover:shadow-lg transition-all duration-300 relative"' + commonCardMeta + '>' +
+            actionBar +
+            '<div class="relative overflow-hidden rounded-lg mb-4 aspect-video">' +
+            '<img alt="" class="memory-preview-trigger w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 cursor-zoom-in" src="' + imgUrl + '"/>' +
+            '</div>' +
+            '<h4 class="font-headline font-semibold text-on-surface mb-1">' + title + '</h4>' +
+            '<p class="text-xs text-outline">' + dateStr + '</p>' +
+            '</div>';
+    }
+
+    function applySortMode() {
+        var label;
+        switch (state.sortMode) {
+            case 0:
+                state.sort = 'createdAt';
+                state.order = 'desc';
+                label = '最近添加';
+                break;
+            case 1:
+                state.sort = 'createdAt';
+                state.order = 'asc';
+                label = '最早添加';
+                break;
+            case 2:
+                state.sort = 'eventDate';
+                state.order = 'desc';
+                label = '拍摄·由近到远';
+                break;
+            case 3:
+                state.sort = 'eventDate';
+                state.order = 'asc';
+                label = '拍摄·由远到近';
+                break;
+            default:
+                state.sortMode = 0;
+                state.sort = 'createdAt';
+                state.order = 'desc';
+                label = '最近添加';
+        }
+        document.getElementById('sortLabel').textContent = label;
+    }
+
+    function loadPage(reset) {
+        if (state.loading) return;
+        state.loading = true;
+        var loadingEl = document.getElementById('memoryLoading');
+        var errEl = document.getElementById('memoryError');
+        errEl.classList.add('hidden');
+        errEl.textContent = '';
+        loadingEl.classList.remove('hidden');
+        var grid = document.getElementById('memoryGrid');
+        if (reset) {
+            state.page = 0;
+            state.loadedItems = [];
+            grid.innerHTML = '';
+        }
+        var params = new URLSearchParams();
+        if (state.category && state.category !== 'ALL') params.set('category', state.category);
+        params.set('sort', state.sort);
+        params.set('order', state.order);
+        params.set('page', String(state.page));
+        params.set('size', String(PAGE_SIZE));
+
+        fetch(API_LIST + '?' + params.toString())
+            .then(function (res) {
+                if (!res.ok) throw new Error('加载失败');
+                return res.json();
+            })
+            .then(function (data) {
+                var before = state.loadedItems.length;
+                data.items.forEach(function (item, idx) {
+                    state.loadedItems.push(item);
+                    grid.insertAdjacentHTML('beforeend', renderCard(item, before + idx));
+                });
+                state.hasMore = data.hasMore;
+                state.page = data.page + 1;
+                document.getElementById('btnLoadMore').disabled = !data.hasMore;
+            })
+            .catch(function (e) {
+                errEl.textContent = e.message || '网络错误';
+                errEl.classList.remove('hidden');
+            })
+            .finally(function () {
+                state.loading = false;
+                loadingEl.classList.add('hidden');
+            });
+    }
+
+    document.querySelectorAll('.cat-tab').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.cat-tab').forEach(function (b) {
+                b.classList.remove('bg-primary', 'text-white', 'shadow-md', 'shadow-primary/10');
+                b.classList.add('bg-surface-container-high', 'text-on-surface-variant');
+            });
+            btn.classList.add('bg-primary', 'text-white', 'shadow-md', 'shadow-primary/10');
+            btn.classList.remove('bg-surface-container-high', 'text-on-surface-variant');
+            state.category = btn.getAttribute('data-category');
+            loadPage(true);
+        });
+    });
+
+    document.getElementById('sortToggleBtn').addEventListener('click', function () {
+        state.sortMode = (state.sortMode + 1) % 4;
+        applySortMode();
+        loadPage(true);
+    });
+
+    document.getElementById('btnLoadMore').addEventListener('click', function () {
+        if (state.hasMore && !state.loading) loadPage(false);
+    });
+
+    document.getElementById('memoryGrid').addEventListener('click', function (e) {
+        var delBtn = e.target.closest('.delete-memory-btn');
+        if (delBtn) {
+            var id = delBtn.getAttribute('data-memory-id');
+            if (!id) return;
+            if (!window.confirm('确认删除这条回忆吗？删除后不可恢复。')) return;
+            fetch(API_DELETE + encodeURIComponent(id), { method: 'DELETE' })
+                .then(function (res) {
+                    return res.json().then(function (body) {
+                        if (!res.ok) throw new Error(body.error || '删除失败');
+                        return body;
+                    });
+                })
+                .then(function () {
+                    loadPage(true);
+                })
+                .catch(function (err) {
+                    alert(err.message || '删除失败');
+                });
+            return;
+        }
+        var img = e.target.closest('.memory-preview-trigger');
+        if (img) {
+            var card = img.closest('.memory-card');
+            if (!card) return;
+            openPreview(parseInt(card.getAttribute('data-preview-index'), 10));
+        }
+    });
+
+    var modal = document.getElementById('uploadModal');
+    function openModal() {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+    function closeModal() {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+    document.getElementById('openUploadBtn').addEventListener('click', openModal);
+    document.getElementById('uploadCancelBtn').addEventListener('click', closeModal);
+    document.getElementById('uploadModalBackdrop').addEventListener('click', closeModal);
+
+    document.getElementById('uploadForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var imgInput = document.getElementById('ufImage');
+        if (!imgInput.files || !imgInput.files[0]) {
+            alert('请选择照片');
+            return;
+        }
+        var fd = new FormData();
+        fd.append('image', imgInput.files[0]);
+        fd.append('title', document.getElementById('ufTitle').value.trim());
+        fd.append('category', document.getElementById('ufCategory').value);
+        var ed = document.getElementById('ufEventDate').value;
+        if (ed) fd.append('eventDate', ed);
+        var comp = document.getElementById('ufCompanions').value.trim();
+        if (comp) fd.append('companions', comp);
+        var desc = document.getElementById('ufDescription').value.trim();
+        if (desc) fd.append('description', desc);
+        fd.append('layout', document.getElementById('ufLayout').value);
+
+        var submitBtn = document.getElementById('uploadSubmitBtn');
+        submitBtn.disabled = true;
+        fetch(API_CREATE, { method: 'POST', body: fd })
+            .then(function (res) {
+                return res.json().then(function (body) {
+                    if (!res.ok) throw new Error(body.error || '保存失败');
+                    return body;
+                });
+            })
+            .then(function () {
+                closeModal();
+                document.getElementById('uploadForm').reset();
+                loadPage(true);
+            })
+            .catch(function (err) {
+                alert(err.message);
+            })
+            .finally(function () {
+                submitBtn.disabled = false;
+            });
+    });
+
+    var previewModal = document.getElementById('previewModal');
+    var previewImage = document.getElementById('previewImage');
+    var previewCaption = document.getElementById('previewCaption');
+
+    function renderPreview() {
+        var item = state.loadedItems[state.previewIndex];
+        if (!item) return;
+        previewImage.src = item.imageUrl;
+        previewCaption.textContent = (item.title || '') + ' · ' + formatZhDate(item.eventDate);
+    }
+
+    function openPreview(index) {
+        if (!Number.isFinite(index) || index < 0 || index >= state.loadedItems.length) return;
+        state.previewIndex = index;
+        renderPreview();
+        previewModal.classList.remove('hidden');
+        previewModal.classList.add('flex');
+    }
+
+    function closePreview() {
+        previewModal.classList.add('hidden');
+        previewModal.classList.remove('flex');
+        state.previewIndex = -1;
+    }
+
+    function shiftPreview(step) {
+        if (state.previewIndex < 0 || state.loadedItems.length === 0) return;
+        var next = state.previewIndex + step;
+        if (next < 0) next = state.loadedItems.length - 1;
+        if (next >= state.loadedItems.length) next = 0;
+        state.previewIndex = next;
+        renderPreview();
+    }
+
+    document.getElementById('previewBackdrop').addEventListener('click', closePreview);
+    document.getElementById('previewCloseBtn').addEventListener('click', closePreview);
+    previewModal.addEventListener('wheel', function (e) {
+        if (previewModal.classList.contains('hidden')) return;
+        e.preventDefault();
+        if (Math.abs(e.deltaY) < 2) return;
+        shiftPreview(e.deltaY > 0 ? 1 : -1);
+    }, { passive: false });
+    window.addEventListener('keydown', function (e) {
+        if (previewModal.classList.contains('hidden')) return;
+        if (e.key === 'Escape') closePreview();
+        if (e.key === 'ArrowRight') shiftPreview(1);
+        if (e.key === 'ArrowLeft') shiftPreview(-1);
+    });
+
+    applySortMode();
+    loadPage(true);
+})();
+</script>
+</body>
+</html>

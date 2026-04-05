@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html class="light" lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5"/>
+
+    <!--
+        页面标题（浏览器标签显示）：
+        你可以把 "Luminous Sanctuary - Startup" 改为自己的项目名。
+    -->
+    <title>Luminous Sanctuary - Startup</title>
+
+    <!-- 外部样式依赖：Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+    <!-- 外部字体依赖：标题字体/正文字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;1,400&amp;display=swap"
+          rel="stylesheet"/>
+
+    <!-- 外部图标字体：Material Symbols -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+          rel="stylesheet"/>
+
+    <!--
+        Tailwind 主题配置区（颜色、字体、圆角等）
+        你可以在这里改主题颜色，建议优先改以下几个核心色：
+        - primary（主色）
+        - secondary（辅助色）
+        - background（背景色）
+    -->
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "error-container": "#fa7150",
+                        "outline": "#818178",
+                        "on-tertiary-container": "#605b50",
+                        "surface": "#fffcf7",
+                        "on-primary-container": "#632b2d",
+                        "tertiary-container": "#fbf3e4",
+                        "primary-dim": "#854647",
+                        "on-secondary-fixed-variant": "#566953",
+                        "tertiary-fixed-dim": "#ece5d6",
+                        "tertiary-dim": "#5c584d",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed": "#fdabab",
+                        "surface-container-low": "#fcf9f3",
+                        "secondary-fixed": "#e1f7da",
+                        "secondary-container": "#e1f7da",
+                        "on-background": "#373831",
+                        "error": "#b23d21",
+                        "tertiary": "#696458",
+                        "surface-dim": "#e3e3d6",
+                        "primary": "#935252",
+                        "primary-container": "#fdabab",
+                        "background": "#fffcf7",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#f0eee5",
+                        "on-primary-fixed-variant": "#6e3435",
+                        "on-primary": "#ffffff",
+                        "on-surface": "#373831",
+                        "inverse-surface": "#0e0e0c",
+                        "primary-fixed-dim": "#ee9e9e",
+                        "secondary": "#566953",
+                        "surface-bright": "#fffcf7",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed-variant": "#6b665a",
+                        "secondary-fixed-dim": "#d3e9cc",
+                        "surface-container-highest": "#eae9dd",
+                        "on-secondary-fixed": "#3a4d38",
+                        "on-tertiary-fixed": "#4d493f",
+                        "on-tertiary": "#ffffff",
+                        "on-error-container": "#671200",
+                        "surface-variant": "#eae9dd",
+                        "on-primary-fixed": "#491719",
+                        "inverse-primary": "#fdabab",
+                        "on-surface-variant": "#64655c",
+                        "on-secondary-container": "#4c5f49",
+                        "outline-variant": "#babaaf",
+                        "secondary-dim": "#4a5d47",
+                        "tertiary-fixed": "#fbf3e4",
+                        "inverse-on-surface": "#9e9d98",
+                        "error-dim": "#821a01",
+                        "surface-tint": "#935252",
+                        "surface-container": "#f6f4ec"
+                    },
+                    fontFamily: {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Be Vietnam Pro"],
+                        "label": ["Be Vietnam Pro"]
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+
+    <style>
+        html {
+            overflow-x: hidden;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            min-height: 100dvh;
+            width: 100%;
+            max-width: 100vw;
+            overflow-x: hidden;
+            overflow-y: auto;
+            background-color: #fffcf7;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 200, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .glass-glow {
+            background: radial-gradient(circle at center, rgba(253, 171, 171, 0.15) 0%, rgba(255, 252, 247, 0) 70%);
+        }
+
+        .sparkle-dot {
+            position: absolute;
+            background: #fdabab;
+            border-radius: 50%;
+            filter: blur(1px);
+        }
+
+        /* 欢迎主标题：整句单行，随视口宽度平滑缩放（缩放浏览器窗口也会跟着变） */
+        .welcome-main-title {
+            font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+            font-weight: 700;
+            color: #935252;
+            letter-spacing: 0.02em;
+            line-height: 1.12;
+            margin: 0;
+            white-space: nowrap;
+            font-size: clamp(0.65rem, 2.65vw + 0.35rem, 3.65rem);
+            max-width: 100%;
+        }
+    </style>
+</head>
+
+<body class="relative flex min-h-screen min-h-[100dvh] w-full max-w-full flex-col items-center justify-center overflow-x-hidden font-body text-on-surface">
+<!-- 全屏背景层 -->
+<div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_#fcf9f3_0%,_#fffcf7_100%)]"></div>
+    <div class="absolute inset-0 glass-glow"></div>
+
+    <!-- 装饰光点（可新增/删减） -->
+    <div class="sparkle-dot w-1.5 h-1.5 top-32 left-48 opacity-40"></div>
+    <div class="sparkle-dot w-2.5 h-2.5 top-64 right-40 opacity-30"></div>
+    <div class="sparkle-dot w-2 h-2 bottom-48 left-1/4 opacity-50"></div>
+    <div class="sparkle-dot w-1.5 h-1.5 top-1/2 right-1/4 opacity-40"></div>
+    <div class="sparkle-dot w-1 h-1 bottom-40 right-1/3 opacity-60"></div>
+    <div class="sparkle-dot w-1 h-1 top-1/4 left-1/3 opacity-30"></div>
+    <div class="sparkle-dot w-2 h-2 bottom-1/4 right-20 opacity-45"></div>
+
+    <!-- 柔光抽象形状（可改大小/颜色/模糊程度） -->
+    <div class="absolute -top-40 -left-40 w-[60rem] h-[60rem] bg-primary-container/10 rounded-full blur-[160px]"></div>
+    <div class="absolute -bottom-40 -right-40 w-[60rem] h-[60rem] bg-secondary-container/20 rounded-full blur-[160px]"></div>
+    <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[50rem] h-[50rem] bg-tertiary-container/10 rounded-full blur-[140px]"></div>
+</div>
+
+<!-- 主内容层 -->
+<main class="relative z-10 flex w-full max-w-full flex-1 flex-col items-center justify-center px-4 py-10 text-center sm:px-8 md:px-12">
+    <div class="flex w-full max-w-full flex-col items-center px-1">
+        <!-- 头部图标区 -->
+        <div class="relative mb-8 w-full max-w-full sm:mb-12">
+            <div class="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-surface-container-highest shadow-sm sm:mb-12 sm:h-32 sm:w-32">
+                <span class="material-symbols-outlined text-5xl text-primary sm:text-6xl" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+            </div>
+
+            <!-- 主标题：整句一行，字号随窗口变化 -->
+            <h1 class="welcome-main-title">「欢迎来到醋酸钠的专属小天地✨」</h1>
+
+            <!-- 副标题：可按你朋友的语气微调 -->
+            <p class="mx-auto mt-6 max-w-2xl font-body text-base leading-relaxed text-on-surface-variant opacity-80 sm:mt-10 sm:text-lg md:text-2xl">
+                这里是属于你的温柔角落，<br/>让心情在这里慢慢深呼吸。
+            </p>
+        </div>
+
+        <div class="mb-8 h-[1px] w-24 bg-outline-variant/30 sm:mb-12 sm:w-32"></div>
+
+        <!--
+            进入按钮：点击后进入 /home 主页。
+        -->
+        <div>
+            <a href="/home" th:href="@{/home}"
+               class="group inline-flex transform items-center gap-2 rounded-full bg-gradient-to-r from-primary to-primary-container px-8 py-4 text-on-primary shadow-lg transition-all duration-300 hover:shadow-xl active:scale-95 sm:gap-4 sm:px-12 sm:py-5 md:px-14 md:py-6">
+                <span class="font-headline text-base font-semibold sm:text-lg md:text-xl">点击进入小木屋</span>
+                <span class="material-symbols-outlined text-2xl transition-transform group-hover:translate-x-2 sm:text-3xl">east</span>
+            </a>
+        </div>
+    </div>
+</main>
+
+<!-- 页脚署名 -->
+<footer class="relative z-20 flex flex-col items-center justify-center gap-3 px-4 pb-16 pt-4 sm:gap-4 sm:pb-24">
+    <div class="flex max-w-full items-center gap-3 sm:gap-6">
+        <span class="hidden h-[1px] w-12 bg-outline-variant/20 sm:inline sm:w-20"></span>
+        <p class="font-label text-[0.65rem] italic uppercase leading-snug tracking-[0.15em] text-stone-400 sm:text-sm sm:tracking-[0.3em]">
+            Your good friend Acetic_Na created for you.
+        </p>
+        <span class="hidden h-[1px] w-12 bg-outline-variant/20 sm:inline sm:w-20"></span>
+    </div>
+    <p class="font-body text-center text-sm font-medium text-secondary/60 sm:text-lg">
+        「你的好朋友醋酸钠 为你打造」
+    </p>
+</footer>
+
+<!-- 外层柔和边框 -->
+<div class="pointer-events-none fixed inset-0 z-50 border-[0.75rem] border-surface opacity-20 sm:border-[1.5rem] lg:border-[3rem]"></div>
+</body>
+</html>

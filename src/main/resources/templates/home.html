@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html class="light" lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5">
+    <title>首页 - 挚友专属・治愈树洞备忘录</title>
+
+    <th:block th:replace="~{fragments/common-head :: coreDeps()}"></th:block>
+    <style>
+        /* 随浏览器窗口伸缩，允许纵向滚动 */
+        body {
+            margin: 0;
+            min-height: 100vh;
+            min-height: 100dvh;
+            width: 100%;
+            max-width: 100vw;
+            overflow-x: hidden;
+            overflow-y: auto;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #fffcf7;
+            color: #373831;
+        }
+
+        .font-headline { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+        .glass-panel { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+
+        /*
+         成长树动画样式：
+         - 树干高度、叶片大小会根据签到天数动态调整
+         - 呼吸动画和轻微摇摆提升“活着”的感觉
+        */
+        .tree-stage-wrap { position: relative; width: 240px; height: 220px; }
+        .soil-base {
+            position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+            width: 140px; height: 28px; background: #e8dcc7; border-radius: 999px;
+            box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.08);
+        }
+        .tree-stem {
+            position: absolute; bottom: 48px; left: 50%; transform: translateX(-50%);
+            width: 16px; height: 36px; border-radius: 999px;
+            background: linear-gradient(180deg, #8b5b3f 0%, #6f442f 100%);
+            transform-origin: bottom center;
+            animation: sway 3.6s ease-in-out infinite;
+            transition: all 0.5s ease;
+        }
+        .leaf {
+            position: absolute; background: #79b857; border-radius: 999px;
+            filter: drop-shadow(0 2px 3px rgba(87, 134, 66, 0.25));
+            opacity: 0;
+            transition: all 0.45s ease;
+            animation: breathe 2.8s ease-in-out infinite;
+        }
+        .leaf-a { width: 24px; height: 14px; left: calc(50% - 26px); bottom: 86px; transform: rotate(-30deg); }
+        .leaf-b { width: 24px; height: 14px; left: calc(50% + 2px); bottom: 90px; transform: rotate(28deg); }
+        .leaf-c { width: 28px; height: 18px; left: calc(50% - 40px); bottom: 112px; transform: rotate(-36deg); }
+        .leaf-d { width: 28px; height: 18px; left: calc(50% + 10px); bottom: 116px; transform: rotate(34deg); }
+        .leaf-e { width: 34px; height: 24px; left: calc(50% - 17px); bottom: 136px; transform: rotate(-4deg); }
+
+        @keyframes sway {
+            0%, 100% { transform: translateX(-50%) rotate(-2deg); }
+            50% { transform: translateX(-50%) rotate(2deg); }
+        }
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.06); }
+        }
+
+        /* 从「我很开心」页返回时：快乐能量注入小树的短暂光晕 */
+        .tree-stem.joy-energy-pulse {
+            animation: treeStemJoyPulse 2.4s ease-out 1;
+        }
+        @keyframes treeStemJoyPulse {
+            0% {
+                box-shadow: 0 0 0 rgba(251, 191, 36, 0);
+                filter: drop-shadow(0 0 0 transparent);
+            }
+            42% {
+                box-shadow: 0 0 18px 6px rgba(251, 191, 36, 0.55), 0 0 36px 10px rgba(253, 186, 116, 0.35);
+                filter: drop-shadow(0 0 12px rgba(255, 214, 120, 0.95));
+            }
+            100% {
+                box-shadow: 0 0 0 rgba(251, 191, 36, 0);
+                filter: drop-shadow(0 0 0 transparent);
+            }
+        }
+        .leaf.joy-leaf-pulse {
+            animation: leafJoyPulse 2.4s ease-out 1;
+        }
+        @keyframes leafJoyPulse {
+            0%, 100% {
+                filter: drop-shadow(0 2px 3px rgba(87, 134, 66, 0.25));
+            }
+            45% {
+                filter: drop-shadow(0 0 12px rgba(186, 230, 140, 0.75)) drop-shadow(0 2px 3px rgba(87, 134, 66, 0.25));
+            }
+        }
+
+        /* 惊喜收藏 ≥10：小树星光环绕 */
+        .tree-stage-wrap.tree-fx-stars::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: 72px;
+            width: 120px;
+            height: 120px;
+            margin-left: -60px;
+            border-radius: 50%;
+            pointer-events: none;
+            background: radial-gradient(circle, rgba(255, 248, 220, 0.35) 0%, rgba(253, 224, 140, 0.12) 45%, transparent 70%);
+            box-shadow: 0 0 24px rgba(253, 224, 140, 0.25), 0 0 48px rgba(196, 181, 253, 0.2);
+            animation: treeStarHalo 4s ease-in-out infinite;
+        }
+        @keyframes treeStarHalo {
+            0%, 100% { opacity: 0.65; transform: scale(0.92); }
+            50% { opacity: 1; transform: scale(1.06); }
+        }
+        /* ≥30：常驻和平鸽装饰 */
+        .tree-stage-wrap.tree-fx-dove .tree-dove-deco {
+            display: block;
+        }
+        .tree-dove-deco {
+            display: none;
+            position: absolute;
+            right: 8%;
+            bottom: 108px;
+            font-size: 1.35rem;
+            line-height: 1;
+            filter: drop-shadow(0 2px 6px rgba(55, 56, 49, 0.12));
+            animation: treeDoveBob 3.2s ease-in-out infinite;
+        }
+        @keyframes treeDoveBob {
+            0%, 100% { transform: translateY(0) rotate(-4deg); }
+            50% { transform: translateY(-5px) rotate(3deg); }
+        }
+        /* 鸽群飞彩蛋层 */
+        #homeSurpriseFlockLayer {
+            position: fixed;
+            inset: 0;
+            z-index: 70;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .home-flock-bird {
+            position: absolute;
+            font-size: 1.4rem;
+            line-height: 1;
+            opacity: 0.85;
+            animation: homeFlockFly linear forwards;
+        }
+        @keyframes homeFlockFly {
+            0% { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+            8% { opacity: 0.9; }
+            100% { transform: translate(var(--fx), var(--fy)) rotate(12deg); opacity: 0; }
+        }
+        .home-surprise-mem-float {
+            position: fixed;
+            z-index: 28;
+            max-width: min(18rem, 86vw);
+            padding: 0.55rem 0.9rem;
+            border-radius: 12px;
+            font-size: 0.82rem;
+            line-height: 1.45;
+            font-weight: 600;
+            color: #5c4038;
+            background: rgba(255, 252, 247, 0.94);
+            border: 1px solid rgba(253, 186, 116, 0.4);
+            box-shadow: 0 10px 32px rgba(55, 56, 49, 0.08);
+            pointer-events: none;
+            animation: homeMemFloatDrift 14s linear forwards;
+        }
+        @keyframes homeMemFloatDrift {
+            0% { transform: translateX(-12px) translateY(0); opacity: 0; }
+            6% { opacity: 0.95; }
+            100% { transform: translateX(calc(100vw + 40px)) translateY(-8vh); opacity: 0; }
+        }
+
+        /* 问候逐字入场 + 整句极轻上浮（仅用 transform，避免 filter 动画导致抖动） */
+        .home-greet-ch {
+            display: inline-block;
+            opacity: 0;
+            transform: translate3d(0, 8px, 0);
+            backface-visibility: hidden;
+        }
+        .home-greet-headline-wrap.home-greet-line-glow {
+            will-change: transform;
+            transform: translateZ(0);
+            /* 静态柔光，不参与逐帧变化，减轻重绘 */
+            text-shadow:
+                0 0 20px rgba(253, 224, 140, 0.2),
+                0 0 40px rgba(251, 191, 36, 0.08);
+            animation: homeGreetLineFloat 5s ease-in-out infinite;
+        }
+        @keyframes homeGreetLineFloat {
+            0%, 100% { transform: translate3d(0, 0, 0); }
+            50% { transform: translate3d(0, -2px, 0); }
+        }
+        /* 今日小确幸：右上角轻提示，自动消失（不挡左侧问候副标题） */
+        .home-bliss-toast {
+            left: auto;
+            opacity: 0;
+            transform: translate3d(0, 8px, 0);
+            transition: opacity 0.45s ease, transform 0.45s ease;
+        }
+        .home-bliss-toast.home-bliss-toast--show {
+            opacity: 1;
+            transform: translate3d(0, 0, 0);
+        }
+        /* 「开启旅程」仪式：卡片放大 + 文案行发光 */
+        #dmJourneyCard {
+            transition: transform 0.55s cubic-bezier(0.34, 1.45, 0.64, 1);
+            transform-origin: center center;
+            will-change: transform;
+        }
+        #dmJourneyCard.dm-journey-card--ritual {
+            transform: scale(1.1);
+        }
+        .dm-journey-line {
+            display: block;
+            transition: color 0.45s ease, text-shadow 0.55s ease;
+        }
+        .dm-journey-line.dm-journey-line--glow {
+            color: #4a3d35;
+            text-shadow:
+                0 0 18px rgba(253, 224, 140, 0.95),
+                0 0 36px rgba(251, 191, 36, 0.55),
+                0 0 52px rgba(253, 186, 116, 0.35);
+        }
+        #homeJourneyRippleLayer {
+            position: fixed;
+            inset: 0;
+            z-index: 102;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .home-journey-ripple-ring {
+            position: absolute;
+            width: 48px;
+            height: 48px;
+            margin: -24px 0 0 -24px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(253, 224, 140, 0.55) 0%, rgba(251, 191, 36, 0.22) 42%, transparent 72%);
+            transform: scale(0.15);
+            opacity: 0.85;
+            animation: homeJourneyRippleExpand 1.35s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+        }
+        @keyframes homeJourneyRippleExpand {
+            to {
+                transform: scale(92);
+                opacity: 0;
+            }
+        }
+        .home-journey-star-particle {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 6px;
+            height: 6px;
+            margin: -3px 0 0 -3px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ffffff 0%, #fde68a 55%, transparent 100%);
+            box-shadow: 0 0 12px rgba(251, 191, 36, 0.95);
+            z-index: 106;
+            pointer-events: none;
+            animation: homeJourneyStarFly 1.05s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+        }
+        @keyframes homeJourneyStarFly {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% {
+                transform: translate(var(--jdx, 0), var(--jdy, 0)) scale(0.15);
+                opacity: 0.12;
+            }
+        }
+        .journey-ph-anim {
+            animation: journeyPhShimmer 4s ease-in-out infinite;
+        }
+        @keyframes journeyPhShimmer {
+            0%, 100% { opacity: 0.55; }
+            50% { opacity: 1; }
+        }
+        .journey-wave-line {
+            position: fixed;
+            height: 3px;
+            pointer-events: none;
+            z-index: 108;
+            background: repeating-linear-gradient(
+                90deg,
+                rgba(147, 82, 82, 0.35) 0 6px,
+                transparent 6px 12px
+            );
+            opacity: 0.45;
+            border-radius: 2px;
+            animation: journeyWaveDrift 2.8s linear infinite;
+        }
+        @keyframes journeyWaveDrift {
+            from { background-position: 0 0; }
+            to { background-position: 24px 0; }
+        }
+        .home-echo-note-float {
+            position: fixed;
+            z-index: 27;
+            max-width: min(17rem, 82vw);
+            padding: 0.6rem 0.95rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            font-weight: 600;
+            color: #5c4038;
+            background: linear-gradient(145deg, rgba(255, 252, 247, 0.97), rgba(254, 243, 199, 0.5));
+            border: 1px solid rgba(253, 186, 116, 0.45);
+            box-shadow: 0 8px 28px rgba(55, 56, 49, 0.1);
+            pointer-events: none;
+            opacity: 0;
+            animation: homeEchoNoteFade 16s ease-out forwards;
+        }
+        @keyframes homeEchoNoteFade {
+            0% { opacity: 0; transform: translateY(8px) scale(0.98); }
+            8% { opacity: 0.92; transform: translateY(0) scale(1); }
+            78% { opacity: 0.88; }
+            100% { opacity: 0; transform: translateY(-6px) scale(1); }
+        }
+        #homeGreetingSparkRoot {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 25;
+        }
+        .home-greet-spark {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            margin: -2px 0 0 -2px;
+            border-radius: 50%;
+            pointer-events: none;
+            background: radial-gradient(circle, #fff9e6 0%, #fbbf24 70%, transparent 100%);
+            box-shadow: 0 0 8px rgba(251, 191, 36, 0.75);
+            animation: homeGreetSparkLife 0.52s ease-out forwards;
+        }
+        @keyframes homeGreetSparkLife {
+            0% { transform: scale(1); opacity: 0.95; }
+            100% { transform: scale(0.15) translate(var(--sx), var(--sy)); opacity: 0; }
+        }
+        .tree-stem.bliss-energy-pulse {
+            animation: treeStemBlissPulse 2.4s ease-out 1;
+        }
+        @keyframes treeStemBlissPulse {
+            0% { box-shadow: 0 0 0 rgba(253, 186, 200, 0); filter: drop-shadow(0 0 0 transparent); }
+            42% {
+                box-shadow: 0 0 20px 8px rgba(253, 186, 200, 0.5), 0 0 32px 10px rgba(167, 243, 208, 0.35);
+                filter: drop-shadow(0 0 14px rgba(253, 224, 200, 0.9));
+            }
+            100% { box-shadow: 0 0 0 rgba(253, 186, 200, 0); filter: drop-shadow(0 0 0 transparent); }
+        }
+        .leaf.bliss-leaf-pulse {
+            animation: leafBlissPulse 2.4s ease-out 1;
+        }
+        @keyframes leafBlissPulse {
+            0%, 100% { filter: drop-shadow(0 2px 3px rgba(87, 134, 66, 0.25)); }
+            45% { filter: drop-shadow(0 0 14px rgba(190, 242, 200, 0.85)) drop-shadow(0 2px 3px rgba(87, 134, 66, 0.25)); }
+        }
+        #homeAmbientParticles {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="flex min-h-screen w-full max-w-full flex-col overflow-x-hidden lg:flex-row">
+<div id="homeAmbientParticles" aria-hidden="true"></div>
+<div id="homeJourneyRippleLayer" aria-hidden="true"></div>
+<div id="homeGreetingSparkRoot" aria-hidden="true"></div>
+<nav th:replace="~{fragments/layout :: sidebar('home')}"></nav>
+
+<main class="relative z-10 min-h-screen min-w-0 w-full flex-1 bg-surface pb-24 sm:pb-28 lg:ml-72 lg:pb-0">
+    <header th:replace="~{fragments/layout :: topbar(activeTopNav='home')}"></header>
+
+    <section class="relative z-10 flex min-h-0 flex-col px-4 py-8 sm:px-8 lg:px-12 xl:px-20 lg:py-12">
+        <div class="mb-8 space-y-4 lg:mb-16">
+            <h2 id="homeGreetingHeadline"
+                class="home-greet-headline-wrap text-3xl font-extrabold font-headline leading-tight tracking-tight text-on-surface sm:text-4xl md:text-5xl lg:text-6xl cursor-pointer select-none outline-none transition-opacity hover:opacity-90"
+                tabindex="0"
+                role="button"
+                title="点击收获今日小确幸（文案会自动消失）"
+                aria-label="问候语，点击显示今日小确幸温柔短句">
+                早安，我亲爱的朋友。
+            </h2>
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:space-x-4 sm:gap-0">
+                <div class="hidden h-[1px] w-12 shrink-0 bg-primary/30 sm:block"></div>
+                <p id="homeGreetingSub" class="text-base font-body font-medium italic text-secondary-dim sm:text-lg md:text-xl opacity-0 transition-opacity duration-700">
+                    深呼吸。在这里，你是安全的。
+                </p>
+            </div>
+        </div>
+
+        <div class="grid flex-1 grid-cols-1 gap-8 xl:grid-cols-12">
+            <div id="dmJourneyCard" class="relative flex flex-col justify-end overflow-hidden rounded-xl bg-gradient-to-br from-primary-container/20 to-surface-container p-6 shadow-sm group sm:p-8 lg:p-12 xl:col-span-8">
+                <div class="absolute inset-0 z-0 opacity-40 mix-blend-multiply">
+                    <img id="dmHeroImg" class="w-full h-full object-cover" alt="mountain"
+                         src="https://lh3.googleusercontent.com/aida-public/AB6AXuAsCV0ff_FI2wGsKGUo5crmvkzp7_nY_Ef3q7bcY0gBHKgJstYYw2KaPox0Y4nac8eEodK5XWn2KiYI6sWSHribopV3G23SrQ8P67MHdfehNmje_ghyO8e4r44-1kW6oEOpIG_CD7VMT2DNUeAvNKjzCr2w7K6j_QZvd8i3XZkiopSZGi2i1OVguAqeLcJpotcvycC9AyW1w_NL2GT93qaE_S8zeyszU9nPOY2HWCH3JN-Ul91M7fS70y7x_Kq6jiaDkCxbiMBV3mA">
+                </div>
+                <div class="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent z-10"></div>
+                <div class="relative z-20 max-w-lg">
+                    <span id="dmTag" class="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold font-label mb-4 inline-block">每日冥想</span>
+                    <h3 id="dmTitle" class="mb-4 font-headline text-2xl font-bold text-on-surface sm:text-3xl"><span id="dmTitleInner" class="dm-journey-line">晨间的呼吸练习</span></h3>
+                    <p id="dmSubtitle" class="mb-8 text-base text-on-surface-variant sm:text-lg"><span id="dmSubtitleInner" class="dm-journey-line">用三分钟的时间，找回你内在的宁静与力量。今天，让我们从觉察呼吸开始。</span></p>
+                    <button type="button" id="dmCtaBtn" class="px-8 py-4 bg-gradient-to-br from-[#935252] to-[#fdabab] text-white rounded-full font-headline font-bold shadow-lg hover:scale-105 transition-transform"
+                            title="开启自我对话与冥想旅程">
+                        开启旅程
+                    </button>
+                </div>
+            </div>
+
+            <div class="space-y-8 xl:col-span-4">
+                <div class="relative flex min-h-[320px] flex-col overflow-hidden rounded-lg border border-outline-variant/15 bg-surface-container-low p-6 sm:p-8 xl:h-[calc(50%-1rem)] xl:min-h-[360px]">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-secondary-container rounded-2xl flex items-center justify-center mb-4 text-secondary">
+                            <span class="material-symbols-outlined" data-icon="eco">eco</span>
+                        </div>
+                        <h4 class="text-xl font-headline font-semibold text-on-surface">你的成长森林</h4>
+                        <p class="text-sm text-on-surface-variant mt-2">
+                            你已经连续 <span id="meditationStreakDays">7</span> 天通过冥想照看你的心灵花园了。
+                        </p>
+                        <div class="mt-3 flex flex-wrap items-center gap-3">
+                            <button id="signInBtn"
+                                    class="px-4 py-2 rounded-full bg-secondary text-white text-sm font-semibold hover:opacity-90 transition-all">
+                                今日签到
+                            </button>
+                            <span id="signInHint" class="text-xs text-on-surface-variant">每天签到，小树就会长大。</span>
+                        </div>
+                    </div>
+                    <!-- 小树苗：仅在本卡片区域内中下方展示 -->
+                    <div class="flex-1 flex flex-col items-center justify-center min-h-[160px] py-2 pointer-events-none select-none">
+                        <div class="tree-stage-wrap scale-[0.85] origin-bottom" id="homeTreeStageWrap">
+                            <span class="tree-dove-deco" aria-hidden="true" title="来自惊喜收藏的陪伴">🕊️</span>
+                            <div class="soil-base"></div>
+                            <div class="tree-stem" id="treeStem"></div>
+                            <div class="leaf leaf-a" id="leafA"></div>
+                            <div class="leaf leaf-b" id="leafB"></div>
+                            <div class="leaf leaf-c" id="leafC"></div>
+                            <div class="leaf leaf-d" id="leafD"></div>
+                            <div class="leaf leaf-e" id="leafE"></div>
+                        </div>
+                        <p class="text-xs text-secondary/80 font-medium text-center mt-1 leading-snug">成长森林 · 小树苗会陪你一起长大</p>
+                    </div>
+                    <div class="flex-shrink-0 w-full bg-surface-container-highest h-2 rounded-full mt-2 overflow-hidden">
+                        <div class="bg-secondary h-full rounded-full w-[70%]" id="growthProgressBar"></div>
+                    </div>
+                </div>
+
+                <div class="relative flex min-h-[280px] flex-col justify-between overflow-hidden rounded-lg border border-white/20 bg-white/40 p-6 glass-panel sm:p-8 xl:h-[calc(50%-1rem)]">
+                    <div class="absolute -top-4 -right-4 w-24 h-24 bg-primary/10 rounded-full blur-2xl"></div>
+                    <div class="relative z-10">
+                        <div class="w-12 h-12 bg-primary-container rounded-2xl flex items-center justify-center mb-6 text-on-primary-container">
+                            <span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+                        </div>
+                        <h4 class="text-xl font-headline font-semibold text-on-surface">挚友的鼓励</h4>
+                        <p class="text-sm text-on-surface-variant mt-2">
+                            “<span id="encouragementText">你今天看起来很温柔。</span>” —— <span id="encouragementSignature">来自醋酸钠的匿名便签</span>
+                        </p>
+                    </div>
+                    <a class="text-primary font-label text-sm font-bold flex items-center hover:translate-x-2 transition-transform" th:href="@{/cheer}">
+                        去打气站看看 <span class="material-symbols-outlined text-sm ml-1" data-icon="chevron_right">chevron_right</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="pointer-events-none absolute bottom-10 right-4 sm:bottom-20 sm:right-10 lg:right-20">
+            <div class="h-48 w-48 rounded-full bg-[#fdabab]/10 blur-[80px] sm:h-64 sm:w-64"></div>
+        </div>
+        <div class="pointer-events-none absolute right-[20%] top-32 sm:top-40 lg:right-[40%]">
+            <div class="h-36 w-36 rounded-full bg-[#e1f7da]/20 blur-[60px] sm:h-48 sm:w-48"></div>
+        </div>
+    </section>
+
+    <button type="button" id="moodFabBtn" class="group fixed z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#935252] to-[#fdabab] text-white shadow-2xl transition-all hover:scale-110 active:scale-95 touch-manipulation bottom-[max(1.25rem,env(safe-area-inset-bottom,0px))] right-[max(1.25rem,env(safe-area-inset-right,0px))] sm:bottom-10 sm:right-10 sm:h-16 sm:w-16 lg:bottom-[max(3rem,env(safe-area-inset-bottom,0px))] lg:right-[max(3rem,env(safe-area-inset-right,0px))]">
+        <span class="material-symbols-outlined text-3xl" data-icon="add"
+              style="font-variation-settings: 'FILL' 0, 'wght' 500;">add</span>
+        <span class="absolute right-full mr-4 bg-on-surface text-surface text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+            记录此刻心情
+        </span>
+    </button>
+</main>
+
+<div id="homeBlissToast" class="home-bliss-toast pointer-events-none fixed z-[105] w-[min(calc(100vw-1.5rem-env(safe-area-inset-left,0px)-env(safe-area-inset-right,0px)),22rem)] top-[max(4.5rem,env(safe-area-inset-top,0px))] right-[max(0.75rem,env(safe-area-inset-right,0px))] sm:top-24 sm:right-8 lg:top-28 lg:right-12" role="status" aria-live="polite" hidden>
+    <div class="rounded-2xl border border-primary/15 bg-surface-container-lowest/95 px-5 py-4 shadow-lg backdrop-blur-md">
+        <p class="font-label text-xs font-bold uppercase tracking-widest text-primary/80 mb-1.5">今日小确幸</p>
+        <p id="homeBlissToastText" class="font-body text-base leading-relaxed text-on-surface"></p>
+    </div>
+</div>
+
+<div id="journeyDialogModal" class="fixed inset-0 z-[107] hidden items-end justify-center p-0 sm:items-center sm:p-8" role="dialog" aria-modal="true" aria-labelledby="journeyDialogTitle">
+    <div id="journeyDialogBackdrop" class="absolute inset-0 bg-black/40 backdrop-blur-[2px]"></div>
+    <div id="journeyDialogPanel" class="relative max-h-[min(88dvh,100%)] w-full max-w-md overflow-y-auto overscroll-contain rounded-t-2xl border border-primary/20 border-b-0 bg-surface-container-lowest p-5 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] shadow-2xl sm:rounded-2xl sm:border-b sm:p-8 sm:pb-8">
+        <p id="journeyDialogTitle" class="font-headline text-lg font-bold text-on-surface mb-1">与自己的温柔对话</p>
+        <p class="text-sm text-on-surface-variant mb-4">写下一句想对自己说的话，它会化作星光滋养成长树，并收入「时光回响」。</p>
+        <div class="relative">
+            <textarea id="journeyDialogInput" rows="4" maxlength="800"
+                      class="journey-ph-anim w-full rounded-xl border border-outline-variant/40 bg-white px-4 py-3 text-sm text-on-surface resize-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
+                      placeholder="例如：谢谢你还在努力生活。"></textarea>
+            <div id="journeyDialogWave" class="journey-wave-line hidden" aria-hidden="true"></div>
+            <button type="button" id="journeyInspireAssistBtn"
+                    class="mt-2 text-left text-sm font-semibold text-primary underline-offset-2 hover:underline">
+                灵感辅助 · 随机填入一条探索页金句
+            </button>
+        </div>
+        <p id="journeyDialogError" class="text-error text-xs mt-2 hidden"></p>
+        <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <button type="button" id="journeyDialogSubmit" class="flex-1 rounded-full bg-gradient-to-br from-[#935252] to-[#fdabab] py-3 font-semibold text-white shadow-md min-h-[44px]">保存到时光回响</button>
+            <button type="button" id="journeyDialogGoMeditation" class="flex-1 rounded-full border border-outline-variant py-3 font-medium text-on-surface min-h-[44px]">仅去冥想练习</button>
+            <button type="button" id="journeyDialogCancel" class="w-full rounded-full py-2.5 text-sm text-on-surface-variant hover:text-on-surface sm:w-auto sm:px-4">稍后再写</button>
+        </div>
+    </div>
+</div>
+
+<div id="moodModal" class="fixed inset-0 z-[100] hidden items-end justify-center p-0 sm:items-center sm:p-6">
+    <div id="moodModalBackdrop" class="absolute inset-0 bg-black/45"></div>
+    <div class="relative max-h-[min(90dvh,100%)] w-full max-w-md overflow-y-auto overscroll-contain rounded-t-2xl border border-outline-variant/30 border-b-0 bg-surface-container-lowest p-6 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] shadow-2xl sm:rounded-2xl sm:border-b sm:p-8 sm:pb-8">
+        <h3 class="font-headline text-lg font-bold text-on-surface mb-4">记录此刻心情</h3>
+        <textarea id="moodContentInput" rows="5" maxlength="500" placeholder="写下此刻的感受…"
+                  class="w-full rounded-xl border border-outline-variant/40 bg-white px-4 py-3 text-sm text-on-surface resize-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"></textarea>
+        <input id="moodTagInput" type="text" maxlength="32" placeholder="心情标签（可选，如 calm）"
+               class="mt-3 w-full rounded-xl border border-outline-variant/40 bg-white px-4 py-2 text-sm text-on-surface"/>
+        <p id="moodFormError" class="text-error text-xs mt-2 hidden"></p>
+        <div class="flex gap-3 mt-6">
+            <button type="button" id="moodCancelBtn" class="flex-1 py-3 rounded-full border border-outline-variant text-on-surface font-medium hover:bg-surface-container-high transition-colors">取消</button>
+            <button type="button" id="moodSubmitBtn" class="flex-1 py-3 rounded-full bg-gradient-to-br from-primary to-primary-container text-white font-semibold shadow-md">保存</button>
+        </div>
+    </div>
+</div>
+
+<!--
+  接口适配示例：
+  默认读取 /api/home/overview，把昵称、在线时长、连续天数、鼓励语渲染到页面。
+  如果接口地址改了，请同步修改 fetch URL。
+-->
+<script th:src="@{/js/home-greetings.js}"></script>
+<script th:src="@{/js/home-bliss-lines.js}"></script>
+<script th:src="@{/js/hollow-time-echo.js}"></script>
+<script th:src="@{/js/hollow-explore-bonds.js}"></script>
+<script th:src="@{/js/home-ambient.js}"></script>
+<script th:src="@{/js/home-journey.js}"></script>
+<script>
+    var homeBaseGrowth = 0;
+
+    function applyGrowthBarWithBonus() {
+        var bar = document.getElementById('growthProgressBar');
+        if (!bar) {
+            return;
+        }
+        var bonus = 0;
+        try {
+            var n = parseInt(localStorage.getItem('hollowForestBlissBonus') || '0', 10);
+            if (!isNaN(n) && n > 0) {
+                bonus = Math.min(12, n);
+            }
+        } catch (e) { /* ignore */ }
+        var echoBonus = 0;
+        try {
+            var e = parseInt(localStorage.getItem('hollowForestEchoBonus') || '0', 10);
+            if (!isNaN(e) && e > 0) {
+                echoBonus = Math.min(25, e);
+            }
+        } catch (e2) { /* ignore */ }
+        var inspireBonus = 0;
+        try {
+            var ib = parseInt(localStorage.getItem('hollowForestInspireBonus') || '0', 10);
+            if (!isNaN(ib) && ib > 0) {
+                inspireBonus = Math.min(12, ib);
+            }
+        } catch (e3) { /* ignore */ }
+        var w = Math.min(100, Math.max(0, homeBaseGrowth + bonus + echoBonus + inspireBonus));
+        bar.style.width = w + '%';
+    }
+    window.__applyHomeGrowthBar = applyGrowthBarWithBonus;
+
+    function spawnGreetingSparksForChar(rect) {
+        var root = document.getElementById('homeGreetingSparkRoot');
+        if (!root || !rect || rect.width < 1) {
+            return;
+        }
+        var k;
+        for (k = 0; k < 3; k++) {
+            var sp = document.createElement('span');
+            sp.className = 'home-greet-spark';
+            var cx = rect.left + rect.width / 2 + (Math.random() - 0.5) * Math.max(10, rect.width * 0.7);
+            var cy = rect.top + rect.height / 2 + (Math.random() - 0.5) * 6;
+            sp.style.left = cx + 'px';
+            sp.style.top = cy + 'px';
+            var ang = Math.random() * Math.PI * 2;
+            var dist = 14 + Math.random() * 20;
+            sp.style.setProperty('--sx', Math.cos(ang) * dist + 'px');
+            sp.style.setProperty('--sy', Math.sin(ang) * dist * 0.72 + 'px');
+            root.appendChild(sp);
+            (function (el) {
+                window.setTimeout(function () {
+                    if (el.parentNode) {
+                        el.parentNode.removeChild(el);
+                    }
+                }, 620);
+            })(sp);
+        }
+    }
+
+    function renderGreetingAnimated(headlineEl, subEl, dateOpt, greetingOverride) {
+        if (!headlineEl || !subEl) {
+            return;
+        }
+        var g;
+        if (greetingOverride && greetingOverride.headline) {
+            g = {
+                headline: greetingOverride.headline,
+                sub: greetingOverride.sub || '这是今天为你准备的一句温柔。'
+            };
+        } else {
+            if (!window.HollowHomeGreetings) {
+                return;
+            }
+            g = HollowHomeGreetings.getHomeTimeGreeting(dateOpt);
+        }
+        headlineEl.classList.remove('home-greet-line-glow');
+        headlineEl.innerHTML = '';
+        var chars = Array.from(g.headline);
+        var i;
+        for (i = 0; i < chars.length; i++) {
+            (function (idx, ch) {
+                var span = document.createElement('span');
+                span.className = 'home-greet-ch';
+                span.textContent = ch;
+                span.style.transition = 'opacity 0.42s ease, transform 0.55s cubic-bezier(0.22, 0.61, 0.36, 1)';
+                span.style.transform = 'translate3d(0, 8px, 0)';
+                headlineEl.appendChild(span);
+                window.setTimeout(function () {
+                    span.style.opacity = '1';
+                    span.style.transform = 'translate3d(0, 0, 0)';
+                    window.requestAnimationFrame(function () {
+                        spawnGreetingSparksForChar(span.getBoundingClientRect());
+                    });
+                }, 70 + idx * 68);
+            })(i, chars[i]);
+        }
+        subEl.textContent = g.sub;
+        subEl.style.opacity = '0';
+        subEl.classList.add('opacity-0');
+        var subDelay = 70 + chars.length * 68 + 380;
+        window.setTimeout(function () {
+            subEl.classList.remove('opacity-0');
+            subEl.style.opacity = '1';
+        }, subDelay);
+        window.setTimeout(function () {
+            headlineEl.classList.add('home-greet-line-glow');
+        }, subDelay + 220);
+    }
+
+    (function initHomeTimeGreeting() {
+        var h = document.getElementById('homeGreetingHeadline');
+        var s = document.getElementById('homeGreetingSub');
+        if (!h || !s) {
+            return;
+        }
+        var pending = window.HollowExploreBonds ? HollowExploreBonds.consumePendingHomeGreeting() : null;
+        if (pending && pending.headline) {
+            renderGreetingAnimated(h, s, null, pending);
+        } else if (window.HollowHomeGreetings) {
+            renderGreetingAnimated(h, s);
+        }
+        if (!window.HollowHomeGreetings) {
+            return;
+        }
+        var lastSlot = HollowHomeGreetings.slotForHour(new Date().getHours());
+        window.setInterval(function () {
+            if (!window.HollowHomeGreetings) {
+                return;
+            }
+            var now = new Date();
+            var slot = HollowHomeGreetings.slotForHour(now.getHours());
+            if (slot !== lastSlot) {
+                lastSlot = slot;
+                renderGreetingAnimated(h, s, now);
+            }
+        }, 60000);
+    })();
+
+    function blissTodayStr() {
+        var d = new Date();
+        function pad(n) {
+            return n < 10 ? '0' + n : String(n);
+        }
+        return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+    }
+
+    function getBlissShownIds() {
+        try {
+            var a = JSON.parse(localStorage.getItem('hollowBlissShownIds') || '[]');
+            return Array.isArray(a) ? a : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function saveBlissShownIds(arr) {
+        try {
+            localStorage.setItem('hollowBlissShownIds', JSON.stringify(arr));
+        } catch (e) { /* ignore */ }
+    }
+
+    function pickBlissLine() {
+        var pool = window.HollowHomeBlissLines || [];
+        if (!pool.length) {
+            return { id: 0, text: '今天也要对自己温柔一点。' };
+        }
+        var shown = getBlissShownIds();
+        var rest = pool.filter(function (x) {
+            return shown.indexOf(x.id) === -1;
+        });
+        if (!rest.length) {
+            shown = [];
+            saveBlissShownIds(shown);
+            rest = pool.slice();
+        }
+        var item = rest[Math.floor(Math.random() * rest.length)];
+        shown.push(item.id);
+        saveBlissShownIds(shown);
+        return item;
+    }
+
+    var homeBlissHideTimer = null;
+
+    function showHomeBlissToast(text) {
+        var el = document.getElementById('homeBlissToast');
+        var t = document.getElementById('homeBlissToastText');
+        if (!el || !t) {
+            return;
+        }
+        if (homeBlissHideTimer) {
+            clearTimeout(homeBlissHideTimer);
+            homeBlissHideTimer = null;
+        }
+        t.textContent = text;
+        el.removeAttribute('hidden');
+        el.classList.remove('home-bliss-toast--show');
+        window.requestAnimationFrame(function () {
+            window.requestAnimationFrame(function () {
+                el.classList.add('home-bliss-toast--show');
+            });
+        });
+        homeBlissHideTimer = window.setTimeout(function () {
+            el.classList.remove('home-bliss-toast--show');
+            homeBlissHideTimer = window.setTimeout(function () {
+                el.setAttribute('hidden', '');
+                homeBlissHideTimer = null;
+            }, 480);
+        }, 4800);
+    }
+
+    function applyBlissEnergyIfEligible() {
+        var today = blissTodayStr();
+        var last = '';
+        try {
+            last = localStorage.getItem('hollowBlissEnergyDate') || '';
+        } catch (e) { /* ignore */ }
+        if (last === today) {
+            return false;
+        }
+        try {
+            localStorage.setItem('hollowBlissEnergyDate', today);
+            var v = parseInt(localStorage.getItem('hollowForestBlissBonus') || '0', 10);
+            if (isNaN(v)) {
+                v = 0;
+            }
+            localStorage.setItem('hollowForestBlissBonus', String(v + 1));
+        } catch (e2) { /* ignore */ }
+        applyGrowthBarWithBonus();
+        var stem = document.getElementById('treeStem');
+        var leaves = document.querySelectorAll('.tree-stage-wrap .leaf');
+        if (stem) {
+            stem.classList.add('bliss-energy-pulse');
+        }
+        leaves.forEach(function (el) {
+            el.classList.add('bliss-leaf-pulse');
+        });
+        window.setTimeout(function () {
+            if (stem) {
+                stem.classList.remove('bliss-energy-pulse');
+            }
+            leaves.forEach(function (el) {
+                el.classList.remove('bliss-leaf-pulse');
+            });
+        }, 2600);
+        return true;
+    }
+
+    (function initHomeBlissEgg() {
+        var h = document.getElementById('homeGreetingHeadline');
+        if (!h) {
+            return;
+        }
+        function triggerBliss() {
+            var line = pickBlissLine();
+            applyBlissEnergyIfEligible();
+            showHomeBlissToast(line.text);
+        }
+        h.addEventListener('click', triggerBliss);
+        h.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                triggerBliss();
+            }
+        });
+    })();
+
+    function applyTreeStage(stage) {
+        var stem = document.getElementById('treeStem');
+        var leafs = [
+            document.getElementById('leafA'),
+            document.getElementById('leafB'),
+            document.getElementById('leafC'),
+            document.getElementById('leafD'),
+            document.getElementById('leafE')
+        ];
+        var heights = {1: 34, 2: 52, 3: 74, 4: 102, 5: 128};
+        stem.style.height = (heights[stage] || 34) + 'px';
+
+        leafs.forEach(function (leaf, idx) {
+            var visibleCount = stage;
+            leaf.style.opacity = idx < visibleCount ? '1' : '0';
+        });
+    }
+
+    function applySignInFromData(data) {
+        var streak = typeof data.streakDays !== 'undefined' ? data.streakDays : data.meditationStreakDays;
+        if (typeof streak !== 'undefined') {
+            document.getElementById('meditationStreakDays').textContent = streak;
+        }
+        if (typeof data.growthProgress !== 'undefined') {
+            homeBaseGrowth = data.growthProgress;
+            applyGrowthBarWithBonus();
+        }
+        if (typeof data.treeStage !== 'undefined') {
+            applyTreeStage(data.treeStage);
+        }
+        var btn = document.getElementById('signInBtn');
+        var hint = document.getElementById('signInHint');
+        if (data.signedToday) {
+            btn.textContent = '今日已签到';
+            btn.disabled = true;
+            btn.classList.add('opacity-60', 'cursor-not-allowed');
+            hint.textContent = '今天的能量已注入，小树正在悄悄成长。';
+        } else {
+            btn.textContent = '今日签到';
+            btn.disabled = false;
+            btn.classList.remove('opacity-60', 'cursor-not-allowed');
+            hint.textContent = '每天签到，小树就会长大。';
+        }
+    }
+
+    function refreshSignInStatus() {
+        fetch('/api/home/sign-in/status')
+            .then(function (res) { return res.json(); })
+            .then(function (data) { applySignInFromData(data); });
+    }
+
+    function applyDailyMeditation(dm) {
+        if (!dm) return;
+        if (dm.tag) document.getElementById('dmTag').textContent = dm.tag;
+        var tIn = document.getElementById('dmTitleInner');
+        var sIn = document.getElementById('dmSubtitleInner');
+        if (dm.title) {
+            if (tIn) tIn.textContent = dm.title;
+            else document.getElementById('dmTitle').textContent = dm.title;
+        }
+        if (dm.subtitle) {
+            if (sIn) sIn.textContent = dm.subtitle;
+            else document.getElementById('dmSubtitle').textContent = dm.subtitle;
+        }
+        if (dm.ctaLabel) document.getElementById('dmCtaBtn').textContent = dm.ctaLabel;
+        if (dm.backgroundImageUrl) document.getElementById('dmHeroImg').src = dm.backgroundImageUrl;
+        var btn = document.getElementById('dmCtaBtn');
+        btn.dataset.ctaHref = dm.ctaHref || '/meditation';
+    }
+
+    fetch('/api/home/overview')
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            if (data.nickname) document.getElementById('nickname').textContent = data.nickname;
+            if (data.sidebarSubtitle) document.getElementById('onlineDuration').textContent = data.sidebarSubtitle;
+            if (data.avatarUrl) {
+                var navImg = document.querySelector('#navProfileCard img');
+                if (navImg) navImg.src = data.avatarUrl;
+            }
+            if (data.encouragementText) document.getElementById('encouragementText').textContent = data.encouragementText;
+            if (data.encouragementSignature) document.getElementById('encouragementSignature').textContent = data.encouragementSignature;
+            applySignInFromData(data);
+            applyDailyMeditation(data.dailyMeditation);
+        })
+        .catch(function () {
+            refreshSignInStatus();
+        });
+
+    document.getElementById('signInBtn').addEventListener('click', function () {
+        fetch('/api/home/sign-in', { method: 'POST' })
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                var hint = document.getElementById('signInHint');
+                hint.textContent = data.message || '签到成功。';
+                refreshSignInStatus();
+            });
+    });
+
+    var moodModal = document.getElementById('moodModal');
+    function openMoodModal() {
+        moodModal.classList.remove('hidden');
+        moodModal.classList.add('flex');
+        document.getElementById('moodFormError').classList.add('hidden');
+        document.getElementById('moodContentInput').value = '';
+        document.getElementById('moodTagInput').value = '';
+    }
+    function closeMoodModal() {
+        moodModal.classList.add('hidden');
+        moodModal.classList.remove('flex');
+    }
+    document.getElementById('moodFabBtn').addEventListener('click', openMoodModal);
+    document.getElementById('moodCancelBtn').addEventListener('click', closeMoodModal);
+    document.getElementById('moodModalBackdrop').addEventListener('click', closeMoodModal);
+    document.getElementById('moodSubmitBtn').addEventListener('click', function () {
+        var content = document.getElementById('moodContentInput').value.trim();
+        var mood = document.getElementById('moodTagInput').value.trim();
+        var err = document.getElementById('moodFormError');
+        if (!content) {
+            err.textContent = '请填写内容';
+            err.classList.remove('hidden');
+            return;
+        }
+        err.classList.add('hidden');
+        var body = { content: content };
+        if (mood) body.mood = mood;
+        var submitBtn = document.getElementById('moodSubmitBtn');
+        submitBtn.disabled = true;
+        fetch('/api/home/mood', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        })
+            .then(function (res) {
+                return res.json().then(function (j) {
+                    if (!res.ok) throw new Error(j.error || '保存失败');
+                    return j;
+                });
+            })
+            .then(function () {
+                closeMoodModal();
+            })
+            .catch(function (e) {
+                err.textContent = e.message;
+                err.classList.remove('hidden');
+            })
+            .finally(function () {
+                submitBtn.disabled = false;
+            });
+    });
+
+    (function initJoyTreePulseFromCheer() {
+        try {
+            if (sessionStorage.getItem('hollowJoyTreePulse') !== '1') return;
+            sessionStorage.removeItem('hollowJoyTreePulse');
+            var stem = document.getElementById('treeStem');
+            var leaves = document.querySelectorAll('.tree-stage-wrap .leaf');
+            if (stem) stem.classList.add('joy-energy-pulse');
+            leaves.forEach(function (el) {
+                el.classList.add('joy-leaf-pulse');
+            });
+            window.setTimeout(function () {
+                if (stem) stem.classList.remove('joy-energy-pulse');
+                leaves.forEach(function (el) {
+                    el.classList.remove('joy-leaf-pulse');
+                });
+            }, 2600);
+        } catch (e) { /* ignore */ }
+    })();
+
+    (function initSurpriseCollectionTreeAndFloat() {
+        function surpriseCollectionTier() {
+            try {
+                var a = JSON.parse(localStorage.getItem('hollowSurpriseCollection') || '[]');
+                var n = Array.isArray(a) ? a.length : 0;
+                return n >= 50 ? 3 : n >= 30 ? 2 : n >= 10 ? 1 : 0;
+            } catch (e) {
+                return 0;
+            }
+        }
+        var tier = surpriseCollectionTier();
+        try {
+            localStorage.setItem('hollowSurpriseTreeTier', String(tier));
+        } catch (e2) { /* ignore */ }
+        var wrap = document.getElementById('homeTreeStageWrap');
+        if (wrap) {
+            if (tier >= 1) {
+                wrap.classList.add('tree-fx-stars');
+            }
+            if (tier >= 2) {
+                wrap.classList.add('tree-fx-dove');
+            }
+        }
+        function playSurpriseFlockIfPending() {
+            if (sessionStorage.getItem('hollowSurpriseFlockPending') !== '1' || tier < 3) {
+                return;
+            }
+            sessionStorage.removeItem('hollowSurpriseFlockPending');
+            var layer = document.createElement('div');
+            layer.id = 'homeSurpriseFlockLayer';
+            document.body.appendChild(layer);
+            var i;
+            for (i = 0; i < 24; i++) {
+                (function (idx) {
+                    var b = document.createElement('span');
+                    b.className = 'home-flock-bird';
+                    b.setAttribute('aria-hidden', 'true');
+                    b.textContent = '🕊️';
+                    b.style.left = -50 - idx * 16 + 'px';
+                    b.style.top = 8 + (idx % 8) * 11 + 'vh';
+                    b.style.animationDuration = 2.8 + Math.random() * 1.6 + 's';
+                    b.style.animationDelay = (idx * 0.05) + 's';
+                    b.style.setProperty('--fx', window.innerWidth + 80 + idx * 24 + 'px');
+                    b.style.setProperty('--fy', (-40 - Math.random() * 100).toFixed(0) + 'px');
+                    layer.appendChild(b);
+                })(i);
+            }
+            window.setTimeout(function () {
+                if (layer.parentNode) {
+                    layer.parentNode.removeChild(layer);
+                }
+            }, 5200);
+        }
+        playSurpriseFlockIfPending();
+
+        function spawnSavedSurpriseFloat() {
+            try {
+                var a = JSON.parse(localStorage.getItem('hollowSurpriseCollection') || '[]');
+                if (!Array.isArray(a) || !a.length) {
+                    return;
+                }
+                var item = a[Math.floor(Math.random() * a.length)];
+                if (!item || !item.text) {
+                    return;
+                }
+                var el = document.createElement('div');
+                el.className = 'home-surprise-mem-float';
+                el.setAttribute('role', 'status');
+                var lab = document.createElement('span');
+                lab.style.display = 'block';
+                lab.style.fontSize = '10px';
+                lab.style.fontWeight = '800';
+                lab.style.letterSpacing = '0.08em';
+                lab.style.textTransform = 'uppercase';
+                lab.style.color = 'rgba(147, 82, 82, 0.75)';
+                lab.style.marginBottom = '4px';
+                lab.textContent = '曾经的惊喜';
+                var tx = document.createElement('span');
+                tx.style.display = 'block';
+                tx.textContent = item.text;
+                el.appendChild(lab);
+                el.appendChild(tx);
+                el.style.bottom = 10 + Math.random() * 32 + '%';
+                el.style.left = '-24px';
+                document.body.appendChild(el);
+                window.setTimeout(function () {
+                    if (el.parentNode) {
+                        el.parentNode.removeChild(el);
+                    }
+                }, 14800);
+            } catch (e3) { /* ignore */ }
+        }
+        window.setTimeout(spawnSavedSurpriseFloat, 5000 + Math.random() * 6000);
+        window.setInterval(spawnSavedSurpriseFloat, 56000 + Math.random() * 24000);
+    })();
+
+    (function initTimeEchoStickyNotes() {
+        function spawnEchoSticky(text) {
+            if (!text || !window.HollowTimeEcho) {
+                return;
+            }
+            var el = document.createElement('div');
+            el.className = 'home-echo-note-float';
+            el.setAttribute('role', 'status');
+            var lab = document.createElement('span');
+            lab.style.display = 'block';
+            lab.style.fontSize = '10px';
+            lab.style.fontWeight = '800';
+            lab.style.letterSpacing = '0.08em';
+            lab.style.textTransform = 'uppercase';
+            lab.style.color = 'rgba(147, 82, 82, 0.78)';
+            lab.style.marginBottom = '4px';
+            lab.textContent = '时光回响';
+            var tx = document.createElement('span');
+            tx.style.display = 'block';
+            tx.textContent = text;
+            el.appendChild(lab);
+            el.appendChild(tx);
+            var corner = Math.floor(Math.random() * 4);
+            if (corner === 0) {
+                el.style.left = 12 + Math.random() * 18 + '%';
+                el.style.top = 14 + Math.random() * 16 + '%';
+            } else if (corner === 1) {
+                el.style.right = 10 + Math.random() * 16 + '%';
+                el.style.top = 18 + Math.random() * 14 + '%';
+            } else if (corner === 2) {
+                el.style.left = 8 + Math.random() * 20 + '%';
+                el.style.bottom = 16 + Math.random() * 18 + '%';
+            } else {
+                el.style.right = 8 + Math.random() * 18 + '%';
+                el.style.bottom = 14 + Math.random() * 16 + '%';
+            }
+            document.body.appendChild(el);
+            window.setTimeout(function () {
+                if (el.parentNode) {
+                    el.parentNode.removeChild(el);
+                }
+            }, 16800);
+        }
+        window.__hollowSpawnEchoStickyNote = function (text) {
+            spawnEchoSticky(text);
+        };
+        function tick() {
+            try {
+                if (!window.HollowTimeEcho || HollowTimeEcho.count() < 1) {
+                    return;
+                }
+                var e = HollowTimeEcho.getRandom();
+                if (e && e.text) {
+                    spawnEchoSticky(e.text);
+                }
+            } catch (e) { /* ignore */ }
+        }
+        window.setTimeout(tick, 9000 + Math.random() * 7000);
+        window.setInterval(tick, 72000 + Math.random() * 28000);
+    })();
+</script>
+</body>
+</html>
